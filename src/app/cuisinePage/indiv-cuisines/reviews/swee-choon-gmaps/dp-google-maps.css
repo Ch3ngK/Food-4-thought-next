@@ -1,0 +1,55 @@
+.Swee-Choon-Gmaps {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.background-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('https://images.pexels.com/photos/616401/pexels-photo-616401.jpeg?cs=srgb&dl=pexels-goumbik-616401.jpg&fm=jpg');
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.6);
+    z-index: -1;
+}
+
+.foreground-content {
+    position: relative;
+    padding-top: 150px;
+    padding-bottom: 200px;
+}
+
+#Logo-scg {
+    position: absolute;
+    margin-left: 100px;
+    top: 50px;
+}
+
+.text-box-scg {
+    margin: 100px auto 0 auto;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 50px;
+    border-radius: 10px;
+    text-align: center;
+    color: #333;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 1600px;
+    height: 1000px;
+}
+
+.scg-text {
+    font-size: 30px;
+    margin-bottom: 30px;
+}
+
+.google-maps-iframe {
+    width: 100%;
+    height: 650px;
+    border: none;
+}

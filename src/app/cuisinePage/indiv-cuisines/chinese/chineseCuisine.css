@@ -1,0 +1,128 @@
+/* src/styles/CuisineDetailPage.css */
+
+.CuisineDetailPage {
+    position: relative;
+    min-height: 100vh;
+    font-family: 'Inria Serif', serif;
+    color: #333;
+  }
+  
+.background-img {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1; /* send it to the back */
+  width: 100vw;
+  height: 100vh;
+  background-image: url('https://images.pexels.com/photos/616401/pexels-photo-616401.jpeg?cs=srgb&dl=pexels-goumbik-616401.jpg&fm=jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+  filter: brightness(0.6);
+}
+  
+  .content-box {
+    position: relative;
+    max-width: 800px;
+    margin: 100px auto;
+    background-color: rgba(255, 255, 255, 0.85);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    text-align: center;
+  }
+  
+  .cuisine-title {
+    font-size: 48px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+  
+  .cuisine-description {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .food-places-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 30px;
+  }
+  
+  .food-place-card {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    text-align: left;
+  }
+  
+/* Orange box around the heading */
+.orange-box {
+  display: inline-block;
+  background-color: #FFA04D;      /* orange background */
+  color: black;                   /* black text */
+  padding: 10px 20px;
+  border-radius: 20px;            /* rounded corners */
+  border: 2px solid black;        /* thin black border */
+  font-size: 36px;                /* adjust as needed */
+  font-weight: bold;
+}
+
+
+/* Container for the food place header (number + name) */
+.food-place-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Numbering for each place */
+.place-number {
+  background-color: #e3623b;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  width: 30px;
+  height: 30px;
+  text-align: center;
+  line-height: 30px;
+  border-radius: 50%;
+}
+
+/* Existing styles (slightly tweaked) */
+.food-places-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.food-place-card {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  text-align: left;
+  transition: background-color 0.3s ease;
+}
+
+.food-place-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
+.food-place-name {
+  font-size: 24px;
+  color: #e3623b;
+  margin: 0;
+}
+
+.food-place-description {
+  font-size: 16px;
+  color: #333;
+  line-height: 1.5;
+}  

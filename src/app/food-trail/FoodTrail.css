@@ -1,0 +1,36 @@
+.background-img-5 {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background-image: url(https://images.pexels.com/photos/616401/pexels-photo-616401.jpeg?cs=srgb&dl=pexels-goumbik-616401.jpg&fm=jpg);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.dark-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* semi-transparent black */
+  z-index: 1;
+}
+
+.text-box-5 {
+  position: relative;
+  z-index: 2;
+  background-color: rgba(255, 255, 255, 0.822);
+  padding: 50px;
+  border-radius: 10px;
+  text-align: center;
+  font-weight: bold;
+  color: #333;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 700px;
+  max-width: 90%;
+}
