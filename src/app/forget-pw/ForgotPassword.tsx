@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { supabase } from '../supabaseClient';
 
 const logo = '/pictures/Food4Thought.png';
 const chef = '/pictures/chef.png';
@@ -9,15 +10,25 @@ import './ForgotPassword.css';
 function ForgotPassword() {
   const [email, setEmail] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email) {
-      alert(`A password reset link has been sent to ${email}`);
-      setEmail('');
-    } else {
-      alert("Please enter your email address.");
-    }
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (!email) {
+    alert("Please enter your email address.");
+    return;
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-pw`,
+  });
+
+  if (error) {
+    alert(`Error: ${error.message}`);
+  } else {
+    alert(`A password reset link has been sent to ${email}`);
+    setEmail('');
+  }
+};
 
   return (
     <div className="ForgotPassword">

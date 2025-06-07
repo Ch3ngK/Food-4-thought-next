@@ -72,6 +72,7 @@
   font-weight: bold; 
   color: #333;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  height: 700px;
 }
 
 
@@ -103,12 +104,12 @@
   width: 40px;
   height: 40px;
   right: 60px;
-  top: 43.5%;
+  top: 47.5%;
 }
 
 .Username {
   position: absolute;
-  top: 43%;
+  top: 47%;
   left: 15%;
   border: none;
   border-radius: 5px; 
@@ -119,6 +120,20 @@
   box-sizing: border-box;
   background-color: rgb(228, 116, 11);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.error-message {
+  position: absolute; 
+  top: 260px;
+  color: #e63946;       /* nicer red */
+  background-color: #fceae9; /* light red/pink background */
+  padding: 10px 15px;
+  border-radius: 5px;
+  font-size: 20px;
+  margin-top: 10px;
+  max-width: 280px;
+  word-wrap: break-word;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .Username::placeholder {
@@ -135,12 +150,12 @@
   width: 40px;
   height: 40px;
   right: 60px;
-  top: 54.5%;
+  top: 58.5%;
 }
 
 .Password {
   position: absolute;
-  top: 54%;
+  top: 58%;
   left: 15%;
   border: none;
   border-radius: 5px; 
@@ -164,7 +179,7 @@
 
 .Checkbox-container {
   position: absolute;
-  top: 65%;
+  top: 67%;
   left: 15%;
   display: flex;
   align-items: center;
@@ -174,7 +189,7 @@
 
 .Login-button {
   position: absolute;
-  top: 70%;
+  top: 73%;
   left: 25%;
   width: 150px;
   height: 40px;
@@ -193,14 +208,14 @@
   display: inline;
   cursor: pointer;
   position: relative;
-  top: 25px;
+  top: 80px;
   right: 50px;
   font-size: 15px;
 }
 
 .Sign-up {
   position: relative;
-  top: 30px;
+  top: 80px;
   right: 85px;
   font-size: 15px;
 }
