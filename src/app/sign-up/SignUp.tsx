@@ -1,13 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import './SignUp.css';
 import Image from 'next/image';
-import { supabase } from '../supabaseClient'; 
-
-const logo = '/pictures/Food4Thought.png';
-const chef = '/pictures/chef.png';
+import { supabase } from '../supabaseClient';
 
 function SignUp() {
   const [username, setUsername] = useState('');
@@ -16,6 +13,22 @@ function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+
+  // 🟡 New image URLs
+  const [logoUrl, setLogoUrl] = useState('');
+  const [chefUrl, setChefUrl] = useState('');
+
+  useEffect(() => {
+    const fetchImageUrls = async () => {
+      const { data: logo } = supabase.storage.from('pictures').getPublicUrl('Food4Thought.png');
+      const { data: chef } = supabase.storage.from('pictures').getPublicUrl('chef.png');
+
+      setLogoUrl(logo.publicUrl);
+      setChefUrl(chef.publicUrl);
+    };
+
+    fetchImageUrls();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,18 +44,14 @@ function SignUp() {
         email,
         password,
         options: {
-          data: {
-            username: username, // stores in user_metadata
-          }
-        }
+          data: { username },
+        },
       });
 
       if (error && !data?.user) {
         setErrorMsg(error.message);
       } else {
         setSuccessMsg('Signup successful! Please check your email to confirm.');
-        // Optionally redirect to login
-        // router.push('/login');
         setUsername('');
         setEmail('');
         setPassword('');
@@ -55,9 +64,9 @@ function SignUp() {
     <div className="SignUp">
       <div className="background-img-3">
         <div className="text-box-3">
-          <Image id="Chef-3" src={chef} alt="Chef Image" width={100} height={100} />
+          {chefUrl && <Image id="Chef-3" src={chefUrl} alt="Chef Image" width={100} height={100} />}
           <br />
-          <Image id="Logo-signup" src={logo} alt="Food 4 Thought Logo" width={250} height={100} />
+          {logoUrl && <Image id="Logo-signup" src={logoUrl} alt="Food 4 Thought Logo" width={250} height={100} />}
           <br />
           <div className="Sign-up-text">Sign up</div>
           <form onSubmit={handleSubmit}>

@@ -1,7 +1,7 @@
 'use client';
 
-import Forget from './ForgotPassword';
+import ForgetPassword from './ForgotPassword';
 
 export default function ForgetPasswordPage() {
-  return <Forget />;
+  return <ForgetPassword />;
 }

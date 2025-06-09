@@ -1,24 +1,38 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import './Login.css';
 import Image from 'next/image';
 import Link from 'next/link';
-import { supabase } from '../supabaseClient'; 
-
-const logo = '/pictures/Food4Thought.png';
-const userIcon = '/pictures/user-icon.png';
-const passIcon = '/pictures/password-icon.png';
-const chef = '/pictures/chef.png';
+import { supabase } from '../supabaseClient';
 
 function Login() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [userIconUrl, setUserIconUrl] = useState('');
+  const [passIconUrl, setPassIconUrl] = useState('');
+  const [chefUrl, setChefUrl] = useState('');
 
-  const handleLogin = async (e) => {
+  useEffect(() => {
+    const loadImages = async () => {
+      const { data: logo } = supabase.storage.from('pictures').getPublicUrl('Food4Thought.png');
+      const { data: user } = supabase.storage.from('pictures').getPublicUrl('user-icon.png');
+      const { data: pass } = supabase.storage.from('pictures').getPublicUrl('password-icon.png');
+      const { data: chef } = supabase.storage.from('pictures').getPublicUrl('chef.png');
+
+      setLogoUrl(logo.publicUrl);
+      setUserIconUrl(user.publicUrl);
+      setPassIconUrl(pass.publicUrl);
+      setChefUrl(chef.publicUrl);
+    };
+    loadImages();
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -37,10 +51,10 @@ function Login() {
       <header className="App-header">
         <div className="background-img-0"></div>
         <div className="text-box">
-          <Image id="Chef" src={chef} alt="Chef Image" width={100} height={100} />
+          {chefUrl && <Image id="Chef" src={chefUrl} alt="Chef Image" width={100} height={100} />}
           <div className="Welcome">Welcome to</div>
           <br />
-          <Image id="Logo" src={logo} alt="Food 4 Thought Logo" width={250} height={100} />
+          {logoUrl && <Image id="Logo" src={logoUrl} alt="Logo" width={250} height={100} />}
           <div className="Login-text">Login</div>
           <br /><br />
           <form onSubmit={handleLogin}>
@@ -54,7 +68,7 @@ function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
-              <Image id="UserIcon" src={userIcon} alt="User Icon" width={40} height={40} />
+              {userIconUrl && <Image id="UserIcon" src={userIconUrl} alt="User Icon" width={40} height={40} />}
             </div>
             <div>
               <input
@@ -66,7 +80,7 @@ function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-              <Image id="PassIcon" src={passIcon} alt="Password Icon" width={40} height={40} />
+              {passIconUrl && <Image id="PassIcon" src={passIconUrl} alt="Password Icon" width={40} height={40} />}
             </div>
             <button type="submit" className="Login-button">Login</button>
           </form>
