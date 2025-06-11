@@ -67,7 +67,6 @@
   left: 400px;
   bottom: 15px;
   font-size: 20px;
-  font-family: 'Inria Serif', regular;
   transition: transform 0.3s ease; /* add transition here */
 }
 
@@ -82,7 +81,6 @@
   bottom: 15px;
   color: rgb(0, 0, 0);
   font-size: 20px;
-  font-family: 'Inria Serif', regular;
   transition: transform 0.3s ease;
 }
 
@@ -97,7 +95,6 @@
   bottom: 15px;
   color: rgb(0, 0, 0);
   font-size: 20px;
-  font-family: 'Inria Serif', regular;
   transition: transform 0.3s ease;
 }
 
@@ -112,7 +109,6 @@
   bottom: 15px;
   color: rgb(0, 0, 0);
   font-size: 20px;
-  font-family: 'Inria Serif', regular;
   transition: transform 0.3s ease;
 }
 
@@ -127,7 +123,6 @@
     bottom: 15px;
     color: rgb(0, 0, 0);
     font-size: 20px;
-    font-family: 'Inria Serif', regular;
     font-weight: bold; 
     transition: transform 0.3s ease;
 }
@@ -248,7 +243,21 @@
 
 }
 
-.swiper-slide {
+.carousel-img {
+  width: 100%;       
+  height: 500px;       
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.carousel {
+  position: absolute; 
+  top: 250px;
+  width: 1550px;
+  right: 80px;
+}
+
+/*.swiper-slide {
   position: relative; 
   top: 50px;
 }
@@ -262,7 +271,7 @@
 
 .swiper {
   width: 100%;
-  height: 700px; /* adjust as needed */
+  height: 700px; 
 }
 
 .swiper-slide img {
@@ -272,7 +281,7 @@
   width: 100%;
   object-fit: cover;
   border-radius: 5px;
-}
+}*/
 
 
 .carousel-description {
@@ -284,11 +293,13 @@
   padding: 8px 12px;
   border-radius: 8px;
   z-index: 1;
+  width: 400px;
 }
 
+
 #Newspaper {
-  position: absolute;
-  top: 1100px;
+  position: relative;
+  top: 1000px;
   height: 900px;
   width: 1700px;
   right: 50px;
@@ -322,13 +333,14 @@
 
 .Newspaper-container {
   position: relative;
+  top: 10px;
   left: 50px;
   bottom: 850px;
 }
 
 .Comment-1-box {
     position: absolute; 
-    top: 1250px;
+    top: 1190px;
     left: 750px;
     height: 200px;
     width: 1500px;
@@ -406,7 +418,7 @@
 
 .Comment-2-box {
     position: absolute; 
-    top: 1540px;
+    top: 1470px;
     left: 750px;
     height: 200px;
     width: 1500px;
@@ -483,7 +495,7 @@
 
 .Comment-3-box {
     position: absolute; 
-    top: 1840px;
+    top: 1760px;
     left: 750px;
     height: 200px;
     width: 1500px;
@@ -557,11 +569,9 @@
   width: 60px;
 }
 
-
-
 .See-all-button {
   position: absolute;
-  top: 2050px;
+  top: 2100px;
   right: 60px;
   width: 150px;
   height: 50px;
@@ -584,8 +594,7 @@
 
 .Image-container {
   position: relative;
-  top: 1300px;
-  
+  top: 1200px;
   display: inline-block;
   width: 1600px; /* set your width */
   height: 700px; /* set your height */
@@ -656,3 +665,4 @@
   text-align: center;
   text-decoration: underline; 
 }
+

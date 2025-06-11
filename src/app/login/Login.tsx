@@ -6,6 +6,7 @@ import './Login.css';
 import Image from 'next/image';
 import Link from 'next/link';
 import { supabase } from '../supabaseClient';
+import { Input } from "@/components/ui/input"
 
 function Login() {
   const router = useRouter();
@@ -59,7 +60,7 @@ function Login() {
           <br /><br />
           <form onSubmit={handleLogin}>
             <div>
-              <input
+              <Input
                 className="Username"
                 name="email"
                 type="email"
@@ -71,7 +72,7 @@ function Login() {
               {userIconUrl && <Image id="UserIcon" src={userIconUrl} alt="User Icon" width={40} height={40} />}
             </div>
             <div>
-              <input
+              <Input
                 className="Password"
                 name="password"
                 type="password"
