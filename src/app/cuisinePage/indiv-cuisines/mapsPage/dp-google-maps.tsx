@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import './dp-google-maps.css';
-import { supabase } from '../../../../supabaseClient';
+import { supabase } from '../../../supabaseClient';
 
 function SweeChoonGmaps() {
   const [logoUrl, setLogoUrl] = useState('');

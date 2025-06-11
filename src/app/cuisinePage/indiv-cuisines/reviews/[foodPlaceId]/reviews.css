@@ -113,21 +113,22 @@
 }
 
 .Dragon-Palace-Comment-1 {
-    position: absolute; 
-    top: 1000px;
-    left: 960px;
-    height: 260px;
-    width: 1600px;
-    transform: translate(-50%, -50%);
-    color:black;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    background-color: rgb(255, 255, 255);
+  position: relative;
+  z-index: 5;
+  top: 900px;
+  width: 80%;
+  max-width: 1600px;
+  margin: 2rem auto; /* center horizontally */
+  height: 260px; 
+  color: black;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background-color: rgb(255, 255, 255);
+  text-align: left;
 }
 
 .Dragon-Palace-Comment-1-text {
-    position: absolute; 
     text-align: left;
     font-size: 25px;
 } 
@@ -135,58 +136,6 @@
 .comment-1-user {
     position: absolute; 
     top: 220px;
-    font-size: 20px;
-}
-
-.Dragon-Palace-Comment-2 {
-    position: absolute; 
-    top: 1300px;
-    left: 960px;
-    height: 230px;
-    width: 1600px;
-    transform: translate(-50%, -50%);
-    color:black;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    background-color: rgb(255, 255, 255);
-}
-
-.Dragon-Palace-Comment-2-text {
-    position: absolute; 
-    text-align: left;
-    font-size: 25px;
-} 
-
-.comment-2-user {
-    position: absolute; 
-    top: 200px;
-    font-size: 20px;
-}
-
-.Dragon-Palace-Comment-3 {
-    position: absolute; 
-    top: 1600px;
-    left: 960px;
-    height: 230px;
-    width: 1600px;
-    transform: translate(-50%, -50%);
-    color:black;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    background-color: rgb(255, 255, 255);
-}
-
-.Dragon-Palace-Comment-3-text {
-    position: absolute; 
-    text-align: left;
-    font-size: 25px;
-} 
-
-.comment-3-user {
-    position: absolute; 
-    top: 200px;
     font-size: 20px;
 }
 
@@ -248,4 +197,33 @@
 #Thumbs-down-1, #Thumbs-down-2, #Thumbs-down-3,
 #Red-flag-1, #Red-flag-2, #Red-flag-3:hover {
     cursor: pointer;
+}
+
+.back-home-button {
+    display: inline-block;
+    margin: 2 rem auto;
+    padding: 0.5rem 1rem;
+    background-color: #FFA04D;
+    color: black;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight:500;
+    cursor: pointer;
+    text-align: center;
+  }
+
+.no-reviews {
+    position: absolute;
+    left: 600px;
+    top: 1000px;
+    color: black;
+    font-size: 3rem;
+    display: inline-block;
+    margin: 2 rem auto;
+    padding: 0.5rem 1rem;
+    border-radius: 2px;
+    background-color: yellow;
+
 }

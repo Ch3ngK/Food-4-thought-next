@@ -32,6 +32,7 @@ const imageKeys = {
 function Home() {
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [isMounted, setIsMounted] = useState(false);
+  const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchImageUrls = async () => {
@@ -43,8 +44,21 @@ function Home() {
       setImageUrls(urls);
     };
 
+    const fetchUser = async () => {
+      const {data: {user}, error} = await supabase.auth.getUser();
+      if (error) {
+        console.error('Error fetching user:', error);
+        return;
+      }
+      if (user) {
+        const fetchedUsername = user.user_metadata?.username || user.email;
+        setUsername(fetchedUsername);
+      }
+    };
+
     fetchImageUrls();
     setIsMounted(true);
+    fetchUser();
   }, []);
 
   if (!isMounted || Object.keys(imageUrls).length === 0) return null;
@@ -64,7 +78,7 @@ function Home() {
         <Image id="Twitter" src={imageUrls.twitter} alt="Twitter icon" width={70} height={70} />
         <Image id="Facebook" src={imageUrls.facebook} alt="Facebook icon" width={70} height={70} />
         <Image id="Tiktok" src={imageUrls.tiktok} alt="Tiktok icon" width={70} height={70} />
-        <div className="Welcome-1">Welcome Benjamin,</div>
+        <div className="Welcome-1">Welcome {username ? username : 'Guest'}, </div>
       </div>
 
       <div className="text-box-1">
@@ -73,7 +87,7 @@ function Home() {
           <div className="Popular-text-1">Popular</div>
           <div className="Home-text-1">Home</div>
           <div className="About-text-1">About</div>
-          <div className="Create-food-trail-text-1">Create food trail today!</div>
+          <Link href="../food-trail" className="Create-food-trail-text-1">Create food trail today!</Link>
         </div>
 
         <div className="Black-box-1">
