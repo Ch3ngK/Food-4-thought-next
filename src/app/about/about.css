@@ -1,0 +1,105 @@
+.background-img-about {
+  position: fixed; 
+  top: 0px;
+  width: 100%;
+  min-height: 100vh; 
+  height: 100%; 
+  background-image: url( https://images.pexels.com/photos/616401/pexels-photo-616401.jpeg?cs=srgb&dl=pexels-goumbik-616401.jpg&fm=jpg);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center; 
+  border: 2px solid #ccc; 
+  border-radius: 5px; 
+  filter: brightness(0.6); /* dim the background */
+}
+
+.text-box-about {
+  position: relative;
+  margin: 200px auto 100px;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 60px 40px;
+  border-radius: 12px;
+  max-width: 1100px;
+  width: 90%;
+  text-align: left;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+  animation: fadeInUp 1s ease-in-out;
+}
+
+#Logo-about {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  width: 180px;
+  height: auto;
+}
+
+.about-us {
+  font-size: 48px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #2c2c2c;
+}
+
+.about-us-text-1,
+.about-us-text-2,
+.our-story-text {
+  font-size: 20px;
+  line-height: 1.6;
+  margin-bottom: 25px;
+  color: #444;
+}
+
+.our-story,
+.our-goal {
+  font-size: 26px;
+  font-weight: 600;
+  background-color: #e4740b;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 6px;
+  display: inline-block;
+  margin: 30px 0 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(60px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  #Logo-about {
+    top: 20px;
+    left: 20px;
+    width: 140px;
+  }
+
+  .text-box-about {
+    padding: 40px 20px;
+  }
+
+  .about-us {
+    font-size: 36px;
+  }
+
+  .our-story,
+  .our-goal {
+    font-size: 22px;
+  }
+
+  .about-us-text-1,
+  .about-us-text-2,
+  .our-story-text {
+    font-size: 18px;
+  }
+}

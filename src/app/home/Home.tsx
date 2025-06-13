@@ -3,13 +3,19 @@
 import React, { useEffect, useState } from 'react';
 import './Home.css';
 import Link from 'next/link';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Autoplay } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
 import Image from 'next/image';
 import { supabase } from '../supabaseClient';
+
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from '@/components/ui/carousel';
+
+import { Card, CardContent } from '@/components/ui/card';
 
 const imageKeys = {
   logo: 'Food4Thought.png',
@@ -32,7 +38,9 @@ const imageKeys = {
 function Home() {
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [isMounted, setIsMounted] = useState(false);
-  const [username, setUsername] = useState<string | null>(null);
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [totalSlides, setTotalSlides] = useState(0);
 
   useEffect(() => {
     const fetchImageUrls = async () => {
@@ -44,29 +52,48 @@ function Home() {
       setImageUrls(urls);
     };
 
-    const fetchUser = async () => {
-      const {data: {user}, error} = await supabase.auth.getUser();
-      if (error) {
-        console.error('Error fetching user:', error);
-        return;
-      }
-      if (user) {
-        const fetchedUsername = user.user_metadata?.username || user.email;
-        setUsername(fetchedUsername);
-      }
-    };
-
     fetchImageUrls();
     setIsMounted(true);
-    fetchUser();
   }, []);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+
+    setTotalSlides(carouselApi.scrollSnapList().length);
+    setCurrentSlide(carouselApi.selectedScrollSnap() + 1);
+
+    const onSelect = () => {
+      setCurrentSlide(carouselApi.selectedScrollSnap() + 1);
+    };
+    carouselApi.on('select', onSelect);
+
+    const autoplayInterval = setInterval(() => {
+      const nextIndex =
+        (carouselApi.selectedScrollSnap() + 1) % carouselApi.scrollSnapList().length;
+      carouselApi.scrollTo(nextIndex);
+    }, 3000); // 3 seconds interval
+
+    return () => {
+      carouselApi.off('select', onSelect);
+      clearInterval(autoplayInterval);
+    };
+  }, [carouselApi]);
 
   if (!isMounted || Object.keys(imageUrls).length === 0) return null;
 
   const carouselImages = [
-    { src: imageUrls.chickenrice, description: "Hainanese Chicken Rice - A Singaporean classic!" },
-    { src: imageUrls.malayrice, description: "Nasi Lemak - Fragrant rice with spicy sambal and more." },
-    { src: imageUrls.nasibriyani, description: "Nasi Briyani - Aromatic spiced rice with tender meat." },
+    {
+      src: imageUrls.chickenrice,
+      description: 'Hainanese Chicken Rice - A Singaporean classic!',
+    },
+    {
+      src: imageUrls.malayrice,
+      description: 'Nasi Lemak - Fragrant rice with spicy sambal and more.',
+    },
+    {
+      src: imageUrls.nasibriyani,
+      description: 'Nasi Briyani - Aromatic spiced rice with tender meat.',
+    },
   ];
 
   return (
@@ -78,43 +105,44 @@ function Home() {
         <Image id="Twitter" src={imageUrls.twitter} alt="Twitter icon" width={70} height={70} />
         <Image id="Facebook" src={imageUrls.facebook} alt="Facebook icon" width={70} height={70} />
         <Image id="Tiktok" src={imageUrls.tiktok} alt="Tiktok icon" width={70} height={70} />
-        <div className="Welcome-1">Welcome {username ? username : 'Guest'}, </div>
+        <div className="Welcome-1">Welcome Benjamin,</div>
       </div>
 
       <div className="text-box-1">
         <div className="Grey-box-2">
           <Link href="/cuisinePage" className="Cuisines-text-1">Cuisines</Link>
           <div className="Popular-text-1">Popular</div>
-          <div className="Home-text-1">Home</div>
-          <div className="About-text-1">About</div>
-          <Link href="../food-trail" className="Create-food-trail-text-1">Create food trail today!</Link>
+          <Link href="/home" className="Home-text-1">Home</Link>
+          <Link href="/about" className="About-text-1">About</Link>
+          <Link href='../food-trail' className="Create-food-trail-text-1">Create food trail today!</Link>
         </div>
 
         <div className="Black-box-1">
           <div className="Trending">Trending today!</div>
         </div>
 
-        <Swiper
-          className="swiper-slide"
-          modules={[Navigation, Pagination, Autoplay]}
-          navigation
-          pagination={{ clickable: true }}
-          autoplay={{ delay: 3000 }}
-          loop
-          spaceBetween={20}
-          slidesPerView={1}
-        >
-          {carouselImages.map((item, idx) => (
-            <SwiperSlide key={idx}>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <Image src={item.src} alt={`carousel-${idx}`} width={600} height={400} style={{ borderRadius: "10px" }} />
-                <p className="carousel-description">{item.description}</p>
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-
-        <br /><br /><br />
+        {/* Carousel with autoplay */}
+        <div className="carousel">
+          <Carousel setApi={setCarouselApi} className="w-full">
+            <CarouselContent>
+              {carouselImages.map((item, index) => (
+                <CarouselItem key={index}>
+                  <Card>
+                    <CardContent className="flex flex-col items-center justify-center p-4">
+                      <Image src={item.src} alt={`carousel-${index}`}  className="carousel-img" width={800} height={300} style={{ borderRadius: '10px' }} />
+                      <p className="carousel-description mt-2 text-center">{item.description}</p>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
+          <div className="text-muted-foreground py-2 text-center text-sm">
+            Slide {currentSlide} of {totalSlides}
+          </div>
+        </div>
 
         <div className="Black-box-2">
           <div className="Fresh-from-community-text">Fresh from the community</div>
@@ -122,7 +150,6 @@ function Home() {
 
         <div className="Newspaper-container">
           <Image id="Newspaper" src={imageUrls.newspaper} alt="Newspaper" width={1700} height={900} />
-          <div className="Newspaper-overlay"></div>
 
           {/* Comment Box 1 */}
           <div className="Comment-1-box">

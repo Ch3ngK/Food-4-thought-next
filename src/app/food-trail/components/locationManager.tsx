@@ -50,6 +50,12 @@ export default function LocationManager() {
           ))}
         </tbody>
       </table>
+      <button
+        onClick={() => router.push(`/food-trail/Foodtrailmap?${searchParams.toString()}`)}
+        className="view-map-button"
+      >
+        View Map
+      </button>
     </div>
   );
 }

@@ -121,3 +121,19 @@
   background-color: #dc3545;
   color: white;
 }
+
+.view-map-button {
+  margin-top: 1rem;
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #ffa726;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.view-map-button:hover {
+  background-color: #fb8c00;
+}
