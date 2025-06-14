@@ -25,10 +25,6 @@ export default function FoodTrailMap() {
   const searchParams = useSearchParams();
   const [locations, setLocations] = useState<Location[]>([]);
 
-  if (locations.length === 0) {
-  return <p style={{ padding: '1rem', textAlign: 'center' }}>Loading map or no locations provided.</p>;
-  }
-
   useEffect(() => {
     const fetchLocations = async () => {
       const locParams = searchParams.getAll('location');
@@ -55,8 +51,13 @@ export default function FoodTrailMap() {
     fetchLocations();
   }, [searchParams]);
 
-  return (
-    <MapContainer center={[1.3521, 103.8198]} zoom={12} style={{ height: '500px', width: '100%' }}>
+    if (locations.length === 0) {
+  return <p style={{ padding: '1rem', textAlign: 'center' }}>Loading map or no locations provided.</p>;
+  }
+
+return (
+  <div className="map-container">
+    <MapContainer center={[1.3521, 103.8198]} zoom={12} style={{ height: '100%', width: '100%' }}>
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; OpenStreetMap contributors'
@@ -67,5 +68,6 @@ export default function FoodTrailMap() {
         </Marker>
       ))}
     </MapContainer>
-  );
+  </div>
+);
 }

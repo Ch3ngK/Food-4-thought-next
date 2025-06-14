@@ -1,7 +1,11 @@
 'use client';
 
-import Foodtrailmap from './FoodTrailMap';
+import dynamic from 'next/dynamic';
+
+const DynamicMap = dynamic(() => import('./FoodTrailMap'), {
+  ssr: false,
+});
 
 export default function FoodTrailMapPage() {
-  return <Foodtrailmap />;
+  return <DynamicMap />;
 }
