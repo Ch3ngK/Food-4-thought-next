@@ -90,21 +90,13 @@
 
 .Login-text {
   position: absolute; 
-  top: 220px;
-  right: 100px;
+  top: 230px;
+  right: 110px;
   text-align: middle;
   padding-left: 20px; 
   font-size: 30px;
   font-family: 'Inria Serif', regular;
   
-}
-
-#UserIcon {
-  position: absolute; 
-  width: 40px;
-  height: 40px;
-  right: 60px;
-  top: 47.5%;
 }
 
 .Username {
@@ -145,13 +137,6 @@
   opacity: 0.7;
 }
 
-#PassIcon {
-  position: absolute; 
-  width: 40px;
-  height: 40px;
-  right: 60px;
-  top: 58.5%;
-}
 
 .Password {
   position: absolute;
@@ -180,7 +165,7 @@
 .Checkbox-container {
   position: absolute;
   top: 67%;
-  left: 15%;
+  left: 10%;
   display: flex;
   align-items: center;
   gap: 8px; /* space between checkbox and label */
@@ -189,9 +174,9 @@
 
 .Login-button {
   position: absolute;
-  top: 73%;
-  left: 25%;
-  width: 150px;
+  top: 77%;
+  left: 12%;
+  width: 220px;
   height: 40px;
   background-color: rgb(65, 245, 5);
   color: rgb(0, 0, 0);
@@ -208,14 +193,14 @@
   display: inline;
   cursor: pointer;
   position: relative;
-  top: 80px;
+  top: 0px;
   right: 50px;
   font-size: 15px;
 }
 
 .Sign-up {
   position: relative;
-  top: 80px;
-  right: 85px;
+  top: 0px;
+  right: 71px;
   font-size: 15px;
 }

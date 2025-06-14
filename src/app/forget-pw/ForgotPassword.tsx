@@ -5,6 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { supabase } from '../supabaseClient';
 import './ForgotPassword.css';
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -60,15 +62,15 @@ function ForgotPassword() {
           <p>Please enter your email below to reset your password.</p>
           <br></br>
           <form onSubmit={handleSubmit}>
-            <input
+            <Input
               type="email"
-              placeholder="Enter your email"
+              placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              style={{ padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
+              className = "pr-10 focus-visible:ring-3 focus-visible:ring-orange-500 focus:border-orange-500"
             />
-            <br /><br />
+            <br /><br />  
             <button className="Submit-2" type="submit">
               Send Reset Link
             </button>
