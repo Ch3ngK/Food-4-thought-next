@@ -7,6 +7,7 @@
   overflow: hidden;
   margin: 2rem auto;
   max-width: 800px;
+  z-index: 1;
 }
 
 /* Optional: style for the loading text */
@@ -25,4 +26,18 @@
 
 .leaflet-popup-tip {
   background: #fff;
+}
+
+.background-img-ftm {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: url('https://images.pexels.com/photos/616401/pexels-photo-616401.jpeg?cs=srgb&dl=pexels-goumbik-616401.jpg&fm=jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  z-index: -1; /* Push behind other content */
+  filter: brightness(0.6);
 }
