@@ -1,21 +1,14 @@
 'use client';
 
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
-import 'leaflet-routing-machine';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import './FoodTrailMap.css';
+import Image from 'next/image';
+import { supabase } from '../../supabaseClient';
 
-// Fix missing default icon issue
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+mapboxgl.accessToken = 'pk.eyJ1Ijoia3c0NTYiLCJhIjoiY21idWF2YXZ3MGQ5dTJrcHU3OXNmeTF4ayJ9.FOm1RDktfh41mC-BY8woNA';
 
 interface Location {
   name: string;
@@ -23,50 +16,16 @@ interface Location {
   lng: number;
 }
 
-function RoutingMachine({ points, mode }: { points: [number, number][], mode: 'foot' | 'car' | 'bike' }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (!map || points.length < 2) return;
-
-    console.log("Waypoints for routing:", points);
-
-    const waypoints = points.map(([lat, lng]) => {
-      const latLng = L.latLng(lat, lng);
-      console.log("Waypoint:", latLng);
-      return latLng;
-    });
-
-    const routingControl = L.Routing.control({
-      waypoints,
-      routeWhileDragging: false,
-      show: true,
-      addWaypoints: false,
-      lineOptions: { styles: [{ color: 'blue', weight: 4 }] },
-      router: L.Routing.osrmv1({
-        serviceUrl: `https://router.project-osrm.org/route/v1/${mode}`,
-      }),
-      createMarker: (i, wp) => L.marker(wp.latLng).bindPopup(`Stop ${i + 1}`),
-      collapsible: true,
-      container: document.getElementById('sidebar-directions') || undefined,
-    })
-      .on('routingerror', (err) => {
-        console.error('Routing error occurred:', err);
-      })
-      .addTo(map);
-
-    return () => {
-      map.removeControl(routingControl);
-    };
-  }, [map, points, mode]);
-
-  return null;
-}
-
 export default function FoodTrailMap() {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
   const searchParams = useSearchParams();
   const [locations, setLocations] = useState<Location[]>([]);
-  const [mode, setMode] = useState<'foot' | 'car' | 'bike'>('foot');
+  const [route, setRoute] = useState<any>(null);
+  const [steps, setSteps] = useState<string[]>([]);
+  const [summary, setSummary] = useState<{ distance: number; duration: number } | null>(null);
+  const [mode, setMode] = useState<'driving' | 'walking' | 'cycling'>('walking');
+  const imageURL = 'https://uziezeevvajhdsxkumse.supabase.co/storage/v1/object/public/pictures//Food4Thought.png';
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -79,70 +38,177 @@ export default function FoodTrailMap() {
         );
         const data = await res.json();
 
-        if (data && data.length > 0 && !isNaN(parseFloat(data[0].lat)) && !isNaN(parseFloat(data[0].lon))) {
+        if (data.length > 0) {
           geocoded.push({
             name,
             lat: parseFloat(data[0].lat),
             lng: parseFloat(data[0].lon),
           });
-        } else {
-          console.warn(`No geocode result for: ${name}`);
         }
       }
 
-      console.log("Geocoded locations:", geocoded);
       setLocations(geocoded);
     };
 
     fetchLocations();
   }, [searchParams]);
 
-  if (locations.length === 0) {
-    return <p style={{ padding: '1rem', textAlign: 'center' }}>Loading map or no locations provided.</p>;
-  }
+  useEffect(() => {
+    if (!mapContainer.current) return;
 
-  const waypoints: [number, number][] = locations.map(loc => [loc.lat, loc.lng]);
+    // Initialize map
+    const map = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [103.8198, 1.3521], // Default Singapore
+      zoom: 12,
+    });
+
+    mapRef.current = map;
+    map.addControl(new mapboxgl.NavigationControl());
+
+    map.on('load', () => {
+      // Add location markers
+      locations.forEach((loc) => {
+        new mapboxgl.Marker()
+          .setLngLat([loc.lng, loc.lat])
+          .setPopup(new mapboxgl.Popup().setText(loc.name))
+          .addTo(map);
+      });
+
+      // Try to show user's current location
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const { latitude, longitude } = pos.coords;
+            new mapboxgl.Marker({ color: 'red' })
+              .setLngLat([longitude, latitude])
+              .setPopup(new mapboxgl.Popup().setText('Your Location'))
+              .addTo(map);
+
+            map.flyTo({ center: [longitude, latitude], zoom: 14 });
+          },
+          (err) => {
+            console.error('Geolocation error:', err);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+          }
+        );
+      }
+    });
+
+    return () => map.remove();
+  }, [locations]);
+
+  useEffect(() => {
+    if (locations.length < 2 || !mapRef.current) return;
+
+    const coords = locations.map((loc) => `${loc.lng},${loc.lat}`).join(';');
+
+    const fetchRoute = async () => {
+      const res = await fetch(
+        `https://api.mapbox.com/directions/v5/mapbox/${mode}/${coords}?geometries=geojson&steps=true&access_token=${mapboxgl.accessToken}`
+      );
+      const data = await res.json();
+
+      if (data.routes && data.routes.length > 0) {
+        const routeGeo = data.routes[0].geometry;
+        const routeSteps = data.routes[0].legs.flatMap((leg: any) =>
+          leg.steps.map((s: any) => s.maneuver.instruction)
+        );
+        const summaryInfo = {
+          distance: data.routes[0].distance,
+          duration: data.routes[0].duration,
+        };
+
+        setRoute(routeGeo);
+        setSteps(routeSteps);
+        setSummary(summaryInfo);
+
+        const map = mapRef.current;
+        if (!map.getSource('route')) {
+          map.addSource('route', {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              geometry: routeGeo,
+            },
+          });
+
+          map.addLayer({
+            id: 'route',
+            type: 'line',
+            source: 'route',
+            paint: {
+              'line-color': '#1db7dd',
+              'line-width': 5,
+            },
+          });
+        } else {
+          (map.getSource('route') as any).setData({
+            type: 'Feature',
+            geometry: routeGeo,
+          });
+        }
+
+        map.fitBounds(
+          [
+            [Math.min(...locations.map((l) => l.lng)), Math.min(...locations.map((l) => l.lat))],
+            [Math.max(...locations.map((l) => l.lng)), Math.max(...locations.map((l) => l.lat))],
+          ],
+          { padding: 40 }
+        );
+      }
+    };
+
+    if (mapRef.current.isStyleLoaded()) {
+      fetchRoute();
+    } else {
+      mapRef.current.once('load', fetchRoute);
+    }
+  }, [locations, mode]);
 
   return (
     <div className="foodtrailmapcontainer">
       <div className="background-img-ftm"></div>
+      <Image 
+        className="logo-ftm"
+        src={imageURL} 
+        alt="Food" 
+        width={200} 
+        height={300} 
+      />
 
-      {/* Sidebar Directions */}
-      <div
-        id="sidebar-directions"
-        style={{
-          width: '300px',
-          height: '100%',
-          overflowY: 'auto',
-          padding: '1rem',
-          backgroundColor: 'white',
-          position: 'absolute',
-          zIndex: 1000,
-        }}
-      ></div>
-
-      {/* Map */}
-      <div className="map-container">
-        <MapContainer center={[1.3521, 103.8198]} zoom={12} style={{ height: '100%', width: '100%' }}>
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution="&copy; OpenStreetMap contributors"
-          />
-          {locations.map((loc, idx) => (
-            <Marker key={idx} position={[loc.lat, loc.lng]}>
-              <Popup>{loc.name}</Popup>
-            </Marker>
-          ))}
-          <RoutingMachine points={waypoints} mode={mode} />
-        </MapContainer>
+      <div className="map-controls">
+        <button className="walking-button" onClick={() => setMode('walking')}>🚶 Walking</button>
+        <button className="driving-button" onClick={() => setMode('driving')}>🚗 Driving</button>
+        <button className="cycling-button" onClick={() => setMode('cycling')}>🚴 Cycling</button>
       </div>
 
-      {/* Mode Switcher */}
-      <div style={{ position: 'absolute', top: 10, left: 320, zIndex: 1000, display: 'flex', gap: '0.5rem' }}>
-        <button onClick={() => setMode('foot')}>🚶 Walking</button>
-        <button onClick={() => setMode('car')}>🚗 Driving</button>
-        <button onClick={() => setMode('bike')}>🚴 Cycling</button>
+      <div className="sidebar">
+        {summary && (
+          <>
+            <div className='summary-header'>Summary</div>
+            <p>Distance: {(summary.distance / 1000).toFixed(2)} km</p>
+            <p>Duration: {(summary.duration / 60).toFixed(1)} min</p>
+          </>
+        )}
+        {steps.length > 0 && (
+          <>
+          <br></br>
+            <div className='directions-header'>Directions</div>
+            <ol>
+              {steps.map((step, idx) => (
+                <li key={idx}>{step}</li>
+              ))}
+            </ol>
+          </>
+        )}
       </div>
+
+      <div ref={mapContainer} className="map-container" />
     </div>
   );
 }
