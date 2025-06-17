@@ -20,6 +20,7 @@ const imageKeys = {
 interface Review {
   review_comments: string;
   review_username: string;
+  created_at: string;
 }
 
 function Reviews() {
@@ -29,6 +30,9 @@ function Reviews() {
   const [isMounted, setIsMounted] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [foodPlaceName, setFoodPlaceName] = useState<string>('');
+  const [newReview, setNewReview] = useState('');
+  const [username, setUsername] = useState('');
+
 
   useEffect(() => {
     const fetchImageUrls = async () => {
@@ -64,7 +68,7 @@ function Reviews() {
         // fetch reviews
         const { data: reviewsData, error: reviewsError } = await supabase
           .from('reviews')
-          .select('review_comments, review_username')
+          .select('review_comments, review_username, created_at')
           .eq('food_places_id', foodPlaceId);
 
         if (reviewsError) {
@@ -80,6 +84,38 @@ function Reviews() {
 
     fetchReviews();
   }, [foodPlaceId]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!foodPlaceId || !newReview || !username) return;
+
+  const { error } = await supabase
+    .from('reviews')
+    .insert([
+      {
+        review_comments: newReview,
+        review_username: username,
+        food_places_id: foodPlaceId,
+      },
+    ]);
+
+  if (error) {
+    console.error('Error submitting review:', error);
+    return;
+  }
+
+  setNewReview('');
+  setUsername('');
+
+  // Refresh reviews
+  const { data: updatedReviews } = await supabase
+    .from('reviews')
+    .select('review_comments, review_username')
+    .eq('food_places_id', foodPlaceId);
+
+  setReviews(updatedReviews || []);
+};
+
 
   if (!isMounted || Object.keys(imageUrls).length === 0) return null;
 
@@ -97,7 +133,9 @@ function Reviews() {
           <Link href="/cuisinePage/indiv-cuisines/mapsPage" className="dp-google-maps-text">
             View on google maps
           </Link>
-        </div>
+          <br></br>
+          <br></br>
+        <div className='comment-section'>
         {reviews.length === 0 ? (
           <div className="no-reviews">No reviews yet. Be the first to leave one!</div>
         ) : (
@@ -106,14 +144,40 @@ function Reviews() {
             <div className="Dragon-Palace-Comment-1-text" key={index}>
               {review.review_comments}
             </div>
-
+            <br></br><br></br>
             <div className="comment-1-user">By: {review.review_username}</div>
+            <br></br>
+            <span className="comment-timestamp">
+              {new Date(review.created_at).toLocaleString()}
+            </span>  
             <Image id="Thumbs-up-1" src={imageUrls.thumbsUp} alt="thumbs up" width={40} height={20} title="upvote" />
             <Image id="Thumbs-down-1" src={imageUrls.thumbsDown} alt="thumbs down" width={40} height={20} title="downvote" />
             <Image id="Red-flag-1" src={imageUrls.redFlag} alt="red flag" width={40} height={20} title="Flag for inappropriate content" />
             
           </div>
         )))}
+
+        <div className="review-form-container">
+        <h3>Leave a Review</h3>
+        <form onSubmit={handleSubmit} className="review-form">
+          <input
+            type="text"
+            placeholder="Your name"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+          <textarea
+            placeholder="Your review"
+            value={newReview}
+            onChange={(e) => setNewReview(e.target.value)}
+            required
+          />
+          <button type="submit">Submit Review</button>
+        </form>
+        </div>
+      </div>
+      </div>
       </div>
     </div>
   );
