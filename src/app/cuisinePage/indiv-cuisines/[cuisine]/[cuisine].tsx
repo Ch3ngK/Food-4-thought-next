@@ -7,6 +7,7 @@ import '../cuisineStyles.css';
 import { useEffect, useState } from 'react';
 import { useParams } from "next/navigation";
 import { supabase } from '@/app/supabaseClient';
+import './[cuisine].css'
 
 interface FoodPlace {
     name: string;
@@ -19,6 +20,8 @@ function DiffCuisines() {
     const cuisineName = decodeURIComponent(params.cuisine as string);
 
     const [foodPlaces, setFoodPlaces] = useState<FoodPlace[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
+
 
     useEffect(() => {
         if (!cuisineName) return;
@@ -65,7 +68,9 @@ function DiffCuisines() {
     
         fetchFoodPlaces();
       }, [cuisineName]);
-
+        const filteredPlaces = foodPlaces.filter((place) =>
+                                        place.name.toLowerCase().includes(searchTerm.toLowerCase())
+                                      );
       return (
         <div className="ChineseCuisine">
           <div className="background-img"></div>
@@ -76,31 +81,50 @@ function DiffCuisines() {
             <p className="cuisine-description">
               Explore the best hidden gems and local favorites serving authentic {cuisineName} cuisine.
             </p>
-    
+            <input
+              type="text"
+              placeholder="Search food place..."
+              className="search-bar"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                padding: '10px',
+                marginBottom: '20px',
+                borderRadius: '8px',
+                border: '1px solid #ccc',
+                width: '100%',
+                maxWidth: '400px',
+              }}
+            />
+        
             {/* Food Places Listing */}
             <div className="food-places-list">
-              {foodPlaces.map((place, index) => {
-    
-                const cardContent = (
-                  <div className="food-place-card">
-                    <div className="food-place-header">
-                      <span className="place-number">{index + 1}.</span>
-                      <h2 className="food-place-name">{place.name}</h2>
+              {filteredPlaces.length > 0 ? (
+                filteredPlaces.map((place, index) => {
+                  const cardContent = (
+                    <div className="food-place-card">
+                      <div className="food-place-header">
+                        <span className="place-number">{index + 1}.</span>
+                        <h2 className="food-place-name">{place.name}</h2>
+                      </div>
+                      <p className="food-place-description">{place.description}</p>
                     </div>
-                    <p className="food-place-description">{place.description}</p>
-                  </div>
-                );
-    
-                return (
-                  <Link
-                    href={`/cuisinePage/indiv-cuisines/reviews/${place.id}`}
-                    key={place.id}
-                    style={{ textDecoration: 'none', color: 'inherit' }}
-                  >
-                    {cardContent}
-                  </Link>
-                );
-              })}
+                  );
+                 
+                  return (
+                    <Link
+                      href={`/cuisinePage/indiv-cuisines/reviews/${place.id}`}
+                      key={place.id}
+                      style={{ textDecoration: 'none', color: 'inherit' }}
+                    >
+                      {cardContent}
+                    </Link>
+                  );
+                })
+              ) : (
+                <p style={{ fontStyle: 'italic', marginTop: '20px' }}>None found.</p>
+              )}
+
               <Link href='../../cuisinePage' className="back-home-button">Back to Cuisines</Link>
             </div>
           </div>

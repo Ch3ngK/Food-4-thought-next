@@ -7,16 +7,6 @@ import './reviews.css';
 import Link from 'next/link';
 import { supabase } from '@/app/supabaseClient'; // Adjust path if needed
 
-const imageKeys = {
-  logo: 'Food4Thought.png',
-  dpImg1: 'dragon-palace-pic-1.jpg',
-  dpImg2: 'dragon-palace-pic-2.jpg',
-  dpMap: 'dp-google-map.png',
-  thumbsUp: 'thumbs-up.jpg',
-  thumbsDown: 'thumbs-down.jpg',
-  redFlag: 'red-flag.png',
-};
-
 interface Review {
   review_comments: string;
   review_username: string;
@@ -35,55 +25,57 @@ function Reviews() {
 
 
   useEffect(() => {
-    const fetchImageUrls = async () => {
-      const urls: Record<string, string> = {};
-      for (const [key, file] of Object.entries(imageKeys)) {
-        const { data } = supabase.storage.from('pictures').getPublicUrl(file);
-        urls[key] = data.publicUrl;
+  if (!foodPlaceId) return;
+
+  const fetchImagesAndReviews = async () => {
+    try {
+      // Fetch food place info including image filenames
+      const { data: placeData, error: placeError } = await supabase
+        .from('food_places')
+        .select('food_places_name, image_1, image_2, map_image')
+        .eq('food_places_id', foodPlaceId)
+        .single();
+
+      if (placeError || !placeData) {
+        console.error('Error fetching food place details:', placeError);
+        return;
       }
-      setImageUrls(urls);
+
+      setFoodPlaceName(placeData.food_places_name);
+
+      // Convert filenames into public URLs
+      const imageUrls: Record<string, string> = {
+        dpImg1: supabase.storage.from('pictures').getPublicUrl(placeData.image_1).data.publicUrl,
+        dpImg2: supabase.storage.from('pictures').getPublicUrl(placeData.image_2).data.publicUrl,
+        dpMap: supabase.storage.from('pictures').getPublicUrl(placeData.map_image).data.publicUrl,
+        logo: supabase.storage.from('pictures').getPublicUrl('Food4Thought.png').data.publicUrl,
+        thumbsUp: supabase.storage.from('pictures').getPublicUrl('thumbs-up.jpg').data.publicUrl,
+        thumbsDown: supabase.storage.from('pictures').getPublicUrl('thumbs-down.jpg').data.publicUrl,
+        redFlag: supabase.storage.from('pictures').getPublicUrl('red-flag.png').data.publicUrl,
+      };
+
+      setImageUrls(imageUrls);
+
+      // Fetch reviews
+      const { data: reviewsData, error: reviewsError } = await supabase
+        .from('reviews')
+        .select('review_comments, review_username, created_at')
+        .eq('food_places_id', foodPlaceId);
+
+      if (reviewsError) {
+        console.error('Error fetching reviews:', reviewsError);
+        return;
+      }
+
+      setReviews(reviewsData || []);
       setIsMounted(true);
-    };
-    fetchImageUrls();
-  }, []);
+    } catch (error) {
+      console.error('Unexpected error:', error);
+    }
+  };
 
-  useEffect(() => {
-    if (!foodPlaceId) return;
-
-    const fetchReviews = async () => {
-      try {
-        // fetch food place name
-        const { data: placeData, error: placeError } = await supabase
-          .from('food_places')
-          .select('food_places_name')
-          .eq('food_places_id', foodPlaceId)
-          .single();
-
-        if (placeError || !placeData) {
-          console.error('Error fetching food place name:', placeError);
-          return;
-        }
-        setFoodPlaceName(placeData.food_places_name);
-
-        // fetch reviews
-        const { data: reviewsData, error: reviewsError } = await supabase
-          .from('reviews')
-          .select('review_comments, review_username, created_at')
-          .eq('food_places_id', foodPlaceId);
-
-        if (reviewsError) {
-          console.error('Food Place has not been reviewed yet:', reviewsError);
-          return;
-        }
-
-        setReviews(reviewsData || []);
-      } catch (error) {
-        console.error('Unexpected error:', error);
-      }
-    };
-
-    fetchReviews();
-  }, [foodPlaceId]);
+  fetchImagesAndReviews();
+}, [foodPlaceId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();

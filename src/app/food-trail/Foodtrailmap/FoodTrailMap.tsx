@@ -21,12 +21,14 @@ export default function FoodTrailMap() {
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const searchParams = useSearchParams();
   const [locations, setLocations] = useState<Location[]>([]);
+  const [userLocation, setUserLocation] = useState<Location | null>(null);
   const [route, setRoute] = useState<any>(null);
   const [steps, setSteps] = useState<string[]>([]);
   const [summary, setSummary] = useState<{ distance: number; duration: number } | null>(null);
   const [mode, setMode] = useState<'driving' | 'walking' | 'cycling'>('walking');
   const imageURL = 'https://uziezeevvajhdsxkumse.supabase.co/storage/v1/object/public/pictures//Food4Thought.png';
 
+  // Fetch locations from searchParams
   useEffect(() => {
     const fetchLocations = async () => {
       const locParams = searchParams.getAll('location');
@@ -53,59 +55,82 @@ export default function FoodTrailMap() {
     fetchLocations();
   }, [searchParams]);
 
+  // Get user's current location
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          setUserLocation({
+            name: 'Your Location',
+            lat: latitude,
+            lng: longitude,
+          });
+        },
+        (err) => {
+          console.error('Geolocation error:', err);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+        }
+      );
+    }
+  }, []);
+
+  // Initialize map
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Initialize map
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
-      center: [103.8198, 1.3521], // Default Singapore
+      center: [103.8198, 1.3521],
       zoom: 12,
     });
 
     mapRef.current = map;
     map.addControl(new mapboxgl.NavigationControl());
 
-    map.on('load', () => {
-      // Add location markers
-      locations.forEach((loc) => {
-        new mapboxgl.Marker()
-          .setLngLat([loc.lng, loc.lat])
-          .setPopup(new mapboxgl.Popup().setText(loc.name))
-          .addTo(map);
-      });
-
-      // Try to show user's current location
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            const { latitude, longitude } = pos.coords;
-            new mapboxgl.Marker({ color: 'red' })
-              .setLngLat([longitude, latitude])
-              .setPopup(new mapboxgl.Popup().setText('Your Location'))
-              .addTo(map);
-
-            map.flyTo({ center: [longitude, latitude], zoom: 14 });
-          },
-          (err) => {
-            console.error('Geolocation error:', err);
-          },
-          {
-            enableHighAccuracy: true,
-            timeout: 10000,
-          }
-        );
-      }
-    });
-
     return () => map.remove();
-  }, [locations]);
+  }, []);
 
+  // Add markers once map + user location + destinations are ready
   useEffect(() => {
-    if (locations.length < 2 || !mapRef.current) return;
+  if (!mapRef.current || !userLocation || locations.length === 0) return;
 
-    const coords = locations.map((loc) => `${loc.lng},${loc.lat}`).join(';');
+  const map = mapRef.current;
+
+  // Clear existing markers if needed (optional cleanup step)
+
+  // Add user location marker
+  new mapboxgl.Marker({ color: 'red' })
+    .setLngLat([userLocation.lng, userLocation.lat])
+    .setPopup(new mapboxgl.Popup().setText('Your Location'))
+    .addTo(map);
+
+  // Add destination markers
+  locations.forEach((loc) => {
+    new mapboxgl.Marker()
+      .setLngLat([loc.lng, loc.lat])
+      .setPopup(new mapboxgl.Popup().setText(loc.name))
+      .addTo(map);
+  });
+
+  // Optional: center the map after adding markers
+  map.flyTo({ center: [userLocation.lng, userLocation.lat], zoom: 14 });
+
+}, [locations, userLocation]);
+
+
+  // Fetch and draw route
+  useEffect(() => {
+    if (!mapRef.current || !userLocation || locations.length === 0) return;
+
+    const map = mapRef.current;
+
+    const allPoints = [userLocation, ...locations];
+    const coords = allPoints.map((loc) => `${loc.lng},${loc.lat}`).join(';');
 
     const fetchRoute = async () => {
       const res = await fetch(
@@ -127,7 +152,6 @@ export default function FoodTrailMap() {
         setSteps(routeSteps);
         setSummary(summaryInfo);
 
-        const map = mapRef.current;
         if (!map.getSource('route')) {
           map.addSource('route', {
             type: 'geojson',
@@ -155,31 +179,25 @@ export default function FoodTrailMap() {
 
         map.fitBounds(
           [
-            [Math.min(...locations.map((l) => l.lng)), Math.min(...locations.map((l) => l.lat))],
-            [Math.max(...locations.map((l) => l.lng)), Math.max(...locations.map((l) => l.lat))],
+            [Math.min(...allPoints.map((l) => l.lng)), Math.min(...allPoints.map((l) => l.lat))],
+            [Math.max(...allPoints.map((l) => l.lng)), Math.max(...allPoints.map((l) => l.lat))],
           ],
           { padding: 40 }
         );
       }
     };
 
-    if (mapRef.current.isStyleLoaded()) {
+    if (map.isStyleLoaded()) {
       fetchRoute();
     } else {
-      mapRef.current.once('load', fetchRoute);
+      map.once('load', fetchRoute);
     }
-  }, [locations, mode]);
+  }, [userLocation, locations, mode]);
 
   return (
     <div className="foodtrailmapcontainer">
       <div className="background-img-ftm"></div>
-      <Image 
-        className="logo-ftm"
-        src={imageURL} 
-        alt="Food" 
-        width={200} 
-        height={300} 
-      />
+      <Image className="logo-ftm" src={imageURL} alt="Food" width={200} height={300} />
 
       <div className="map-controls">
         <button className="walking-button" onClick={() => setMode('walking')}>🚶 Walking</button>
@@ -197,7 +215,7 @@ export default function FoodTrailMap() {
         )}
         {steps.length > 0 && (
           <>
-          <br></br>
+            <br />
             <div className='directions-header'>Directions</div>
             <ol>
               {steps.map((step, idx) => (
@@ -212,3 +230,4 @@ export default function FoodTrailMap() {
     </div>
   );
 }
+
