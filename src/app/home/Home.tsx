@@ -142,7 +142,7 @@ function Home() {
       <div className="text-box-1">
         <div className="Grey-box-2">
           <Link href="/cuisinePage" className="Cuisines-text-1">Cuisines</Link>
-          <div className="Popular-text-1">Popular</div>
+          <Link href="/popular" className="Popular-text-1">Popular</Link>
           <Link href="/home" className="Home-text-1">Home</Link>
           <Link href="/about" className="About-text-1">About</Link>
           <Link href='../food-trail' className="Create-food-trail-text-1">Create food trail today!</Link>

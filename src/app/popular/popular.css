@@ -1,0 +1,81 @@
+.background-img-popular {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background-image: url(https://images.pexels.com/photos/616401/pexels-photo-616401.jpeg?cs=srgb&dl=pexels-goumbik-616401.jpg&fm=jpg);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  z-index: -1;
+  filter: brightness(0.6);
+}
+
+#Logo-popular {
+  position: absolute;
+  top: 20px;
+  left: 30px;
+  width: 200px; /* Adjust size as needed */
+}
+
+.text-box-popular {
+  position: relative;
+  margin: 150px auto 0 auto;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 40px;
+  border-radius: 12px;
+  text-align: center;
+  font-weight: bold;
+  color: #333;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 1000px;
+}
+
+.pft-quote {
+  position: relative;
+  font-size: 15px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  text-align: left;
+  font-style: italic;
+}
+
+.food-items-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  margin-top: 30px;
+}
+
+.food-item {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.food-item:hover {
+  transform: translateY(-5px);
+}
+
+.food-item img {
+  width: 100%;
+  height: 200
+}
+
+.food-item-name {
+  font-weight: bold;
+  font-size: 10px; /* Change as needed */
+  margin: 10px 15px 5px 15px;
+  color: #222;
+}
+
+.food-item-description {
+  font-size: 8px; /* Change as needed */
+  margin: 0 15px 15px 15px;
+  color: #555;
+  line-height: 1.4;
+}

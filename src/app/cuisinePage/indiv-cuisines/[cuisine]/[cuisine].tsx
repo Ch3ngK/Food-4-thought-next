@@ -72,6 +72,7 @@ function DiffCuisines() {
                                         place.name.toLowerCase().includes(searchTerm.toLowerCase())
                                       );
       return (
+        
         <div className="ChineseCuisine">
           <div className="background-img"></div>
           <div className="content-box">
