@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import './reviews.css';
 import Link from 'next/link';
 import { supabase } from '@/app/supabaseClient'; // Adjust path if needed
+import { usePathname, useSearchParams } from 'next/navigation';
 
 interface Review {
   review_comments: string;
@@ -22,7 +23,6 @@ function Reviews() {
   const [foodPlaceName, setFoodPlaceName] = useState<string>('');
   const [newReview, setNewReview] = useState('');
   const [username, setUsername] = useState('');
-
 
   useEffect(() => {
   if (!foodPlaceId) return;
@@ -77,9 +77,21 @@ function Reviews() {
   fetchImagesAndReviews();
 }, [foodPlaceId]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   if (!foodPlaceId || !newReview || !username) return;
+
+  setReviews(prev => [
+    {
+      review_comments: newReview,
+      review_username: username,
+      created_at: new Date().toISOString(),
+    },
+    ...prev
+  ]);
+
+  setNewReview('');
+  setUsername('');
 
   const { error } = await supabase
     .from('reviews')
@@ -95,19 +107,7 @@ function Reviews() {
     console.error('Error submitting review:', error);
     return;
   }
-
-  setNewReview('');
-  setUsername('');
-
-  // Refresh reviews
-  const { data: updatedReviews } = await supabase
-    .from('reviews')
-    .select('review_comments, review_username')
-    .eq('food_places_id', foodPlaceId);
-
-  setReviews(updatedReviews || []);
-};
-
+}
 
   if (!isMounted || Object.keys(imageUrls).length === 0) return null;
 
@@ -168,6 +168,9 @@ function Reviews() {
           <button type="submit">Submit Review</button>
         </form>
         </div>
+        <Link href='/cuisinePage' className="back-button" style={{ display: 'inline-block' }}>
+          Back
+        </Link>
       </div>
       </div>
       </div>

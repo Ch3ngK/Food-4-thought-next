@@ -2,64 +2,104 @@
 
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import "./FoodStart.css"; 
+import { supabase } from '@/app/supabaseClient';
+import { Input } from '@/components/ui/input';
+import Header from "./components/header";
+import LocationManager from "./components/locationManager";
+import "./FoodTrail.css";
+import "./FoodStart.css";
 
-function FoodStart() {
+export default function FoodTrailPage() {
   const [location, setLocation] = useState("");
-  const route = useRouter();
+  const [hasStarted, setHasStarted] = useState(false);
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    // Check if user has any locations
+    const checkLocations = async () => {
+      const { count } = await supabase
+        .from('food_trail_locations')
+        .select('*', { count: 'exact', head: true });
+      setHasStarted((count || 0) > 0);
+    };
+    checkLocations();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!location.trim()) return;
 
-    // Pass the location as a query param
-    route.push(`/food-trail?location=${encodeURIComponent(location)}`);
+    try {
+      // check authentication
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return router.push('/login');
+
+      // insert first location
+      const { error } = await supabase
+        .from('food_trail_locations')
+        .insert([{ 
+          title: location, 
+          user_id: user.id,
+          visited: false 
+        }]);
+
+      if (error) throw error;
+
+      // transition to trail view
+      setHasStarted(true);
+      router.refresh();
+
+    } catch (error) {
+      console.error("Error adding location:", error);
+      alert("Failed to add location");
+    }
   };
 
-  const handleBackHome = () => {
-    route.push('/home');
+  // Render start screen
+  if (!hasStarted) {
+    return (
+      <div className="background-img-4">
+        <div className="dark-overlay"></div>
+        <div className="text-box-4">
+          <div className="welcome-food-trail">Welcome to the Food Trail! 🍔🍝</div>
+          <br />
+          <div className="add-food-location">Add a Food Location below to start</div>
+          <form onSubmit={handleSubmit} style={{ marginTop: "1rem" }}>
+            <Input
+              className="location-input"
+              type="text"
+              placeholder="e.g. Maxwell Food Centre"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              required
+            />
+            <button className="add-button" type="submit">
+              Add
+            </button>
+          </form>
+          <button 
+            className="back-home-button"
+            onClick={() => router.push('/home')}
+          >
+            Back to Home
+          </button>
+        </div>
+      </div>
+    );
   }
 
+  // Render main trail view
   return (
-  <div className="background-img-4">
-  <div className="dark-overlay"></div>
-  <div className="text-box-4">
-    <div className="welcome-food-trail">Welcome to the Food Trail! 🍔🍝</div>
-    <br></br>
-    <div className="add-food-location">Add a Food Location below to start</div>
-    <form onSubmit={handleSubmit} style={{ marginTop: "1rem" }}>
-      <input
-        className="location-input"
-        type="text"
-        placeholder="e.g. Maxwell Food Centre"
-        value={location}
-        onChange={(e) => setLocation(e.target.value)}
-        style={{
-          padding: "0.5rem 1rem",
-          fontSize: "1rem",
-          width: "250px",
-          marginRight: "1rem",
-        }}
-        required
-      />
-      <button className="add-button" type="submit">Add</button>
-    </form>
-    <button
-      className="back-home-button"
-      type="submit"
-      style={{
-        marginTop: '1rem',
-        padding: '0.5rem 1 rem',
-        fontSize: '1 rem',
-      }}
-      onClick={handleBackHome}>
-      Back to Home
-      </button>
-  </div>
-</div>
+    <div className="background-img-5">
+      <div className="dark-overlay"></div>
+      <div className="text-box-5">
+      <Header />
+        <main>
+          <LocationManager />
+        </main>
+      </div>
+    </div>
   );
 }
-
-export default FoodStart;

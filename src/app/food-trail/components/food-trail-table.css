@@ -59,12 +59,7 @@
   color: #333;
 }
 
-.food-trail-table td input[type="checkbox"] {
-  transform: scale(1.2);
-  cursor: pointer;
-}
-
-.food-trail-table td button {
+.delete-button {
   background-color: #ff4d4f;
   color: white;
   border: none;

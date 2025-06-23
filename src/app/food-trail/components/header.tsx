@@ -1,14 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { supabase } from '@/app/supabaseClient';
 
 export default function Header() {
   const [name, setName] = useState<string | null>(null);
+  const [stats, setStats] = useState({ total: 0, visited: 0 });
   const searchParams = useSearchParams();
 
   const allLocations = searchParams.getAll('location');
   const pending = allLocations.length; 
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { count } = await supabase
+        .from('food_trail_locations')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      const { count: visitedCount } = await supabase
+        .from('food_trail_locations')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('visited', true);
+
+      setStats({
+        total: count || 0,
+        visited: visitedCount || 0
+      });
+    };
+
+    fetchStats();
+  }, []);
+
 
   const handleNameClick = () => {
     const input = prompt("What is your name?");
@@ -27,8 +55,8 @@ export default function Header() {
           </strong>
         </p>
         <p>
-          {pending > 0 ? (
-            <>You still have <strong>{pending}</strong> spots to try!</>
+          {stats.total > 0 ? (
+            <>You still have <strong>{stats.visited}</strong> spots to try!</>
           ) : (
             "You've visited all the spots!"
           )}
