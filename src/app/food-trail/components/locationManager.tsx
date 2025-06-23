@@ -108,7 +108,11 @@ export default function LocationManager() {
         </tbody>
       </table>
       <button
-        onClick={() => router.push(`/food-trail/Foodtrailmap?${searchParams.toString()}`)}
+        onClick={() => {
+          const params = new URLSearchParams();
+          locations.forEach(loc => params.append('location', loc.title));
+          router.push(`/food-trail/Foodtrailmap?${params.toString()}`);
+        }}
         className="view-map-button"
       >
         View Map

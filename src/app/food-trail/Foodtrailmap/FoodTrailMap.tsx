@@ -6,9 +6,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import './FoodTrailMap.css';
 import Image from 'next/image';
-import { supabase } from '../../supabaseClient';
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoia3c0NTYiLCJhIjoiY21idWF2YXZ3MGQ5dTJrcHU3OXNmeTF4ayJ9.FOm1RDktfh41mC-BY8woNA';
+
+const FOURSQUARE_API_KEY = process.env.NEXT_PUBLIC_FOURSQUARE_API_KEY;
 
 interface Location {
   name: string;
@@ -28,34 +29,62 @@ export default function FoodTrailMap() {
   const [mode, setMode] = useState<'driving' | 'walking' | 'cycling'>('walking');
   const imageURL = 'https://uziezeevvajhdsxkumse.supabase.co/storage/v1/object/public/pictures//Food4Thought.png';
 
-  // Fetch locations from searchParams
-  useEffect(() => {
-    const fetchLocations = async () => {
-      const locParams = searchParams.getAll('location');
-      const geocoded: Location[] = [];
+useEffect(() => {
+  const fetchLocations = async () => {
+    const locParams = searchParams.getAll('location');
+    const fetched: Location[] = [];
 
-      for (const name of locParams) {
+    for (const name of locParams) {
+      try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(name)}`
+          `https://api.foursquare.com/v3/places/search?query=${encodeURIComponent(name)}&ll=1.3521,103.8198&radius=3000&limit=1`,
+          {
+            headers: {
+              Accept: 'application/json',
+              Authorization: FOURSQUARE_API_KEY ?? '',
+            },
+          }
         );
+
+        await new Promise((res) => setTimeout(res, 300));
         const data = await res.json();
 
-        if (data.length > 0) {
-          geocoded.push({
-            name,
-            lat: parseFloat(data[0].lat),
-            lng: parseFloat(data[0].lon),
+        if (data.results && data.results.length > 0) {
+          const place = data.results[0];
+          fetched.push({
+            name: place.name,
+            lat: place.geocodes.main.latitude,
+            lng: place.geocodes.main.longitude,
           });
+        } else {
+          // 🌍 Fallback to OpenStreetMap if Foursquare failed
+          const osmRes = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(name)}`
+          );
+          const osmData = await osmRes.json();
+
+          if (osmData.length > 0) {
+            fetched.push({
+              name,
+              lat: parseFloat(osmData[0].lat),
+              lng: parseFloat(osmData[0].lon),
+            });
+          } else {
+            console.warn(`Could not find location: ${name}`);
+          }
         }
+      } catch (error) {
+        console.error(`Error fetching ${name}:`, error);
       }
+    }
 
-      setLocations(geocoded);
-    };
+    setLocations(fetched);
+  };
 
-    fetchLocations();
-  }, [searchParams]);
+  fetchLocations();
+}, [searchParams]);
 
-  // Get user's current location
+
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -67,18 +96,12 @@ export default function FoodTrailMap() {
             lng: longitude,
           });
         },
-        (err) => {
-          console.error('Geolocation error:', err);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-        }
+        (err) => console.error('Geolocation error:', err),
+        { enableHighAccuracy: true, timeout: 10000 }
       );
     }
   }, []);
 
-  // Initialize map
   useEffect(() => {
     if (!mapContainer.current) return;
 
@@ -95,40 +118,29 @@ export default function FoodTrailMap() {
     return () => map.remove();
   }, []);
 
-  // Add markers once map + user location + destinations are ready
   useEffect(() => {
-  if (!mapRef.current || !userLocation || locations.length === 0) return;
+    if (!mapRef.current || !userLocation || locations.length === 0) return;
+    const map = mapRef.current;
 
-  const map = mapRef.current;
-
-  // Clear existing markers if needed (optional cleanup step)
-
-  // Add user location marker
-  new mapboxgl.Marker({ color: 'red' })
-    .setLngLat([userLocation.lng, userLocation.lat])
-    .setPopup(new mapboxgl.Popup().setText('Your Location'))
-    .addTo(map);
-
-  // Add destination markers
-  locations.forEach((loc) => {
-    new mapboxgl.Marker()
-      .setLngLat([loc.lng, loc.lat])
-      .setPopup(new mapboxgl.Popup().setText(loc.name))
+    new mapboxgl.Marker({ color: 'red' })
+      .setLngLat([userLocation.lng, userLocation.lat])
+      .setPopup(new mapboxgl.Popup().setText('Your Location'))
       .addTo(map);
-  });
 
-  // Optional: center the map after adding markers
-  map.flyTo({ center: [userLocation.lng, userLocation.lat], zoom: 14 });
+    locations.forEach((loc) => {
+      new mapboxgl.Marker()
+        .setLngLat([loc.lng, loc.lat])
+        .setPopup(new mapboxgl.Popup().setText(loc.name))
+        .addTo(map);
+    });
 
-}, [locations, userLocation]);
+    map.flyTo({ center: [userLocation.lng, userLocation.lat], zoom: 14 });
+  }, [locations, userLocation]);
 
-
-  // Fetch and draw route
   useEffect(() => {
     if (!mapRef.current || !userLocation || locations.length === 0) return;
 
     const map = mapRef.current;
-
     const allPoints = [userLocation, ...locations];
     const coords = allPoints.map((loc) => `${loc.lng},${loc.lat}`).join(';');
 
@@ -230,4 +242,3 @@ export default function FoodTrailMap() {
     </div>
   );
 }
-
