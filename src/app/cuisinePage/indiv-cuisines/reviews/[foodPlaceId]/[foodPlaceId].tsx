@@ -2,49 +2,62 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { useParams } from 'next/navigation';
-import './reviews.css';
 import Link from 'next/link';
-import { supabase } from '@/app/supabaseClient'; // Adjust path if needed
-import { usePathname, useSearchParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { supabase } from '@/app/supabaseClient';
+import './reviews.css';
 
 interface Review {
+  review_id: number;
   review_comments: string;
   review_username: string;
   created_at: string;
+  upvotes: number;
+  downvotes: number;
+  rating: number;
+  user_id: string | null;
 }
 
 function Reviews() {
   const { foodPlaceId } = useParams();
-
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [isMounted, setIsMounted] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [foodPlaceName, setFoodPlaceName] = useState<string>('');
+  const [foodPlaceName, setFoodPlaceName] = useState('');
   const [newReview, setNewReview] = useState('');
   const [username, setUsername] = useState('');
+  const [rating, setRating] = useState<number>(0);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [editingReviewId, setEditingReviewId] = useState<number | null>(null);
+  const [editedComment, setEditedComment] = useState('');
+  const [editedRating, setEditedRating] = useState<number>(0);
 
+  // Fetch current user
   useEffect(() => {
-  if (!foodPlaceId) return;
+    const getUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+    };
+    getUser();
+  }, []);
 
-  const fetchImagesAndReviews = async () => {
-    try {
-      // Fetch food place info including image filenames
-      const { data: placeData, error: placeError } = await supabase
+  // Fetch place info + reviews
+  useEffect(() => {
+    if (!foodPlaceId) return;
+
+    const fetchData = async () => {
+      const { data: placeData } = await supabase
         .from('food_places')
         .select('food_places_name, image_1, image_2, map_image')
         .eq('food_places_id', foodPlaceId)
         .single();
 
-      if (placeError || !placeData) {
-        console.error('Error fetching food place details:', placeError);
-        return;
-      }
+      if (!placeData) return;
 
       setFoodPlaceName(placeData.food_places_name);
-
-      // Convert filenames into public URLs
-      const imageUrls: Record<string, string> = {
+      setImageUrls({
         dpImg1: supabase.storage.from('pictures').getPublicUrl(placeData.image_1).data.publicUrl,
         dpImg2: supabase.storage.from('pictures').getPublicUrl(placeData.image_2).data.publicUrl,
         dpMap: supabase.storage.from('pictures').getPublicUrl(placeData.map_image).data.publicUrl,
@@ -52,127 +65,236 @@ function Reviews() {
         thumbsUp: supabase.storage.from('pictures').getPublicUrl('thumbs-up.jpg').data.publicUrl,
         thumbsDown: supabase.storage.from('pictures').getPublicUrl('thumbs-down.jpg').data.publicUrl,
         redFlag: supabase.storage.from('pictures').getPublicUrl('red-flag.png').data.publicUrl,
-      };
+      });
 
-      setImageUrls(imageUrls);
-
-      // Fetch reviews
-      const { data: reviewsData, error: reviewsError } = await supabase
+      const { data: reviewsData } = await supabase
         .from('reviews')
-        .select('review_comments, review_username, created_at')
-        .eq('food_places_id', foodPlaceId);
+        .select('*')
+        .eq('food_places_id', foodPlaceId)
+        .order('created_at', { ascending: false });
 
-      if (reviewsError) {
-        console.error('Error fetching reviews:', reviewsError);
-        return;
-      }
-
-      setReviews(reviewsData || []);
+      if (reviewsData) setReviews(reviewsData);
       setIsMounted(true);
-    } catch (error) {
-      console.error('Unexpected error:', error);
+    };
+
+    fetchData();
+  }, [foodPlaceId]);
+
+  // Submit new review
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newReview || !username || !foodPlaceId) return;
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      alert('You must be logged in to submit a review.');
+      return;
     }
-  };
 
-  fetchImagesAndReviews();
-}, [foodPlaceId]);
-
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!foodPlaceId || !newReview || !username) return;
-
-  setReviews(prev => [
-    {
-      review_comments: newReview,
-      review_username: username,
-      created_at: new Date().toISOString(),
-    },
-    ...prev
-  ]);
-
-  setNewReview('');
-  setUsername('');
-
-  const { error } = await supabase
-    .from('reviews')
-    .insert([
-      {
+    const { data, error } = await supabase
+      .from('reviews')
+      .insert([{
         review_comments: newReview,
         review_username: username,
         food_places_id: foodPlaceId,
-      },
-    ]);
+        upvotes: 0,
+        downvotes: 0,
+        rating,
+        user_id: user.id,
+      }])
+      .select();
 
-  if (error) {
-    console.error('Error submitting review:', error);
-    return;
-  }
-}
+    if (error) {
+      console.error('Insert error:', error);
+      return;
+    }
 
-  if (!isMounted || Object.keys(imageUrls).length === 0) return null;
+    if (data && data.length > 0) {
+      setReviews(prev => [data[0], ...prev]);
+    }
+
+    setNewReview('');
+    setUsername('');
+    setRating(0);
+  };
+
+  const handleVote = async (reviewId: number, type: 'upvote' | 'downvote') => {
+    const field = type === 'upvote' ? 'upvotes' : 'downvotes';
+    const { error } = await supabase.rpc(`increment_review_${field}`, {
+      review_id_input: reviewId,
+    });
+
+    if (error) {
+      console.error('Vote error:', error);
+      return;
+    }
+
+    setReviews(prev =>
+      prev.map(r =>
+        r.review_id === reviewId ? { ...r, [field]: r[field] + 1 } : r
+      )
+    );
+  };
+
+  const startEditing = (review: Review) => {
+    setEditingReviewId(review.review_id);
+    setEditedComment(review.review_comments);
+    setEditedRating(review.rating);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent, reviewId: number) => {
+    e.preventDefault();
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData?.user;
+
+    const { error } = await supabase
+      .from('reviews')
+      .update({
+        review_comments: editedComment,
+        rating: editedRating,
+      })
+      .eq('review_id', reviewId)
+      .eq('user_id', user?.id);
+
+    if (error) {
+      console.error('Edit error:', error.message);
+      return;
+    }
+
+    setReviews(prev =>
+      prev.map((r) =>
+        r.review_id === reviewId
+          ? { ...r, review_comments: editedComment, rating: editedRating }
+          : r
+      )
+    );
+
+    setEditingReviewId(null);
+  };
+
+  const handleDelete = async (reviewId: number) => {
+    const confirm = window.confirm('Are you sure you want to delete this review?');
+    if (!confirm) return;
+
+    const { error } = await supabase
+      .from('reviews')
+      .delete()
+      .eq('review_id', reviewId)
+      .eq('user_id', currentUserId); // secure delete
+
+    if (error) {
+      console.error('Delete error:', error);
+      return;
+    }
+
+    setReviews(prev => prev.filter(r => r.review_id !== reviewId));
+  };
+
+  if (!isMounted) return null;
 
   return (
     <div className="DragonPalace">
       <div className="background-layer" />
       <div className="content-layer">
-        <Image id="Logo-6" src={imageUrls.logo} alt="Food 4 Thought Logo" height={80} width={240} />
-
+        <Image id="Logo-6" src={imageUrls.logo} alt="Logo" width={240} height={80} />
         <div className="text-box-6">
           <div className="dragon-palace-header">{foodPlaceName}</div>
-          <Image id="dp-img-1" src={imageUrls.dpImg1} alt="Dragon palace image 1" width={600} height={400} />
-          <Image id="dp-img-2" src={imageUrls.dpImg2} alt="Dragon palace image 2" width={600} height={400} />
-          <Image id="dp-google-map" src={imageUrls.dpMap} alt="Dragon palace google map" width={300} height={200} />
-          <Link href="/cuisinePage/indiv-cuisines/mapsPage" className="dp-google-maps-text">
-            View on google maps
-          </Link>
-          <br></br>
-          <br></br>
-        <div className='comment-section'>
-        {reviews.length === 0 ? (
-          <div className="no-reviews">No reviews yet. Be the first to leave one!</div>
-        ) : (
-          reviews.map((review, index) => (
-          <div className="Dragon-Palace-Comment-1" key={index}>
-            <div className="Dragon-Palace-Comment-1-text" key={index}>
-              {review.review_comments}
-            </div>
-            <br></br><br></br>
-            <div className="comment-1-user">By: {review.review_username}</div>
-            <br></br>
-            <span className="comment-timestamp">
-              {new Date(review.created_at).toLocaleString()}
-            </span>  
-            <Image id="Thumbs-up-1" src={imageUrls.thumbsUp} alt="thumbs up" width={40} height={20} title="upvote" />
-            <Image id="Thumbs-down-1" src={imageUrls.thumbsDown} alt="thumbs down" width={40} height={20} title="downvote" />
-            <Image id="Red-flag-1" src={imageUrls.redFlag} alt="red flag" width={40} height={20} title="Flag for inappropriate content" />
-            
-          </div>
-        )))}
+          <Image id="dp-img-1" src={imageUrls.dpImg1} alt="Image 1" width={300} height={300} />
+          <Image id="dp-img-2" src={imageUrls.dpImg2} alt="Image 2" width={300} height={300} />
+          <Image id="dp-google-map" src={imageUrls.dpMap} alt="Map" width={300} height={200} />
+          <Link href="#" className="dp-google-maps-text">View on Google Maps</Link>
 
-        <div className="review-form-container">
-        <h3>Leave a Review</h3>
-        <form onSubmit={handleSubmit} className="review-form">
-          <input
-            type="text"
-            placeholder="Your name"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-          <textarea
-            placeholder="Your review"
-            value={newReview}
-            onChange={(e) => setNewReview(e.target.value)}
-            required
-          />
-          <button type="submit">Submit Review</button>
-        </form>
+          <div className="comment-section">
+            {reviews.length === 0 ? (
+              <div className="no-reviews">No reviews yet.</div>
+            ) : (
+              reviews.map((review) => (
+                <div className="Dragon-Palace-Comment-1" key={review.review_id}>
+                  {editingReviewId === review.review_id ? (
+                    <form onSubmit={(e) => handleEditSubmit(e, review.review_id)}>
+                      <textarea
+                        className="edit-comment-textarea"
+                        value={editedComment}
+                        onChange={(e) => setEditedComment(e.target.value)}
+                        required
+                      />
+                      <select
+                        value={editedRating}
+                        onChange={(e) => setEditedRating(parseFloat(e.target.value))}
+                      >
+                        {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map((star) => (
+                          <option key={star} value={star}>
+                            {star} {star === 1 ? 'Star' : 'Stars'}
+                          </option>
+                        ))}
+                      </select>
+                      <button className='save-button' type="submit">Save</button>
+                      <button className='cancel-button' type="button" onClick={() => setEditingReviewId(null)}>Cancel</button>
+                    </form>
+                  ) : (
+                    <>
+                      <div className="Dragon-Palace-Comment-1-text">{review.review_comments}</div>
+                      <div className="comment-1-user">By: {review.review_username}</div>
+                      <span className="comment-timestamp">{new Date(review.created_at).toLocaleString()}</span>
+                      <div className="rating-stars">
+                        {Array.from({ length: 5 }, (_, i) => {
+                          const full = review.rating >= i + 1;
+                          const half = review.rating >= i + 0.5 && review.rating < i + 1;
+                          return <span key={i}>{full ? '⭐' : half ? '⯨' : '☆'}</span>;
+                        })}
+                      </div>
+                      {review.user_id === currentUserId && (
+                        <div style={{ marginTop: '10px' }}>
+                          <button className='edit-button' onClick={() => startEditing(review)}>Edit</button>
+                          <button className='delete-button' onClick={() => handleDelete(review.review_id)} style={{ marginLeft: '10px' }}>Delete</button>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Voting */}
+                  <span
+                    style={{ cursor: 'pointer', position: 'relative', display: 'inline-block', width: '40px', height: '20px' }}
+                    onClick={() => handleVote(review.review_id, 'upvote')}
+                  >
+                    <Image id="Thumbs-up-1" src={imageUrls.thumbsUp} alt="thumbs up" width={40} height={20} />
+                    <span style={{ position: 'absolute', bottom: '20px', left: '1060px' }}>{review.upvotes || 0}</span>
+                  </span>
+                  <span
+                    style={{ cursor: 'pointer', position: 'relative', display: 'inline-block', width: '40px', height: '20px' }}
+                    onClick={() => handleVote(review.review_id, 'downvote')}
+                  >
+                    <Image id="Thumbs-down-1" src={imageUrls.thumbsDown} alt="thumbs down" width={40} height={20} />
+                    <span style={{ position: 'absolute', bottom: '20px', left: '1200px' }}>{review.downvotes || 0}</span>
+                  </span>
+
+                  <Image id="Red-flag-1" src={imageUrls.redFlag} alt="red flag" width={40} height={20} title="Flag for inappropriate content" />
+                </div>
+              ))
+            )}
+
+            <div className="review-form-container">
+              <h3>Leave a Review</h3>
+              <form onSubmit={handleSubmit} className="review-form">
+                <input type="text" placeholder="Your name" value={username} onChange={(e) => setUsername(e.target.value)} required />
+                <textarea placeholder="Your review" value={newReview} onChange={(e) => setNewReview(e.target.value)} required />
+                <select value={rating} onChange={(e) => setRating(parseFloat(e.target.value))} required>
+                  <option value="">Select a rating</option>
+                  {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map((star) => (
+                    <option key={star} value={star}>{star} {star === 1 ? 'Star' : 'Stars'}</option>
+                  ))}
+                </select>
+                <button type="submit">Submit</button>
+              </form>
+              <br />
+              <Link href="/cuisinePage" className="back-button">Back</Link>
+            </div>
+          </div>
         </div>
-        <Link href='/cuisinePage' className="back-button" style={{ display: 'inline-block' }}>
-          Back
-        </Link>
-      </div>
-      </div>
       </div>
     </div>
   );
