@@ -5,6 +5,29 @@ import './Home.css';
 import Link from 'next/link';
 import Image from 'next/image';
 import { supabase } from '../supabaseClient';
+import { useRouter } from 'next/navigation';
+
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from '@/components/ui/carousel';
+
+import { Card, CardContent } from '@/components/ui/card';
+
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from '@/components/ui/carousel';
+
+import { Card, CardContent } from '@/components/ui/card';
 
 import {
   Carousel,
@@ -41,6 +64,25 @@ function Home() {
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [totalSlides, setTotalSlides] = useState(0);
+  const [username, setUsername] = useState<string | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error('Error fetching user:', error);
+        return;
+      }
+
+      if (user) {
+        const fetchedUsername = user.user_metadata?.username || user.email;
+        setUsername(fetchedUsername);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     const fetchImageUrls = async () => {
@@ -96,6 +138,16 @@ function Home() {
     },
   ];
 
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Logout error:', error.message);
+    } else {
+      // Optionally redirect to login/home page after logout
+      router.push('/login');
+    }
+  };
+
   return (
     <div className="Home">
       <div className="background-img-1"></div>
@@ -105,13 +157,14 @@ function Home() {
         <Image id="Twitter" src={imageUrls.twitter} alt="Twitter icon" width={70} height={70} />
         <Image id="Facebook" src={imageUrls.facebook} alt="Facebook icon" width={70} height={70} />
         <Image id="Tiktok" src={imageUrls.tiktok} alt="Tiktok icon" width={70} height={70} />
-        <div className="Welcome-1">Welcome Benjamin,</div>
+        <button className = "logout-button" onClick={handleLogout}>Log out</button>
+        <div className="Welcome-1">Welcome {username ? username : 'Guest'},</div>
       </div>
 
       <div className="text-box-1">
         <div className="Grey-box-2">
           <Link href="/cuisinePage" className="Cuisines-text-1">Cuisines</Link>
-          <div className="Popular-text-1">Popular</div>
+          <Link href="/popular" className="Popular-text-1">Popular</Link>
           <Link href="/home" className="Home-text-1">Home</Link>
           <Link href="/about" className="About-text-1">About</Link>
           <Link href='../food-trail' className="Create-food-trail-text-1">Create food trail today!</Link>

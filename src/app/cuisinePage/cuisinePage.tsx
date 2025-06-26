@@ -91,14 +91,9 @@ function CuisinePage() {
             <Link
               key={index}
               className="cuisine-item"
-              href={cuisine === 'Chinese' ? '/cuisinePage/indiv-cuisines/chinese' : '#'}
+              href={`/cuisinePage/indiv-cuisines/${encodeURIComponent(cuisine)}`}
               style={{ textDecoration: 'none', color: 'inherit' }}
-              onClick={(e) => {
-                if (cuisine !== 'Chinese') {
-                  e.preventDefault();
-                  alert(`${cuisine} page not implemented yet!`);
-                }
-              }}
+              onClick={(e) => {}}
             >
               {cuisineUrls[cuisine] && (
                 <Image
@@ -113,6 +108,7 @@ function CuisinePage() {
             </Link>
           ))}
         </div>
+        <Link href='./home' className="back-home-button">Back to Home</Link>
       </div>
     </div>
   );

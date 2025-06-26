@@ -5,6 +5,7 @@ import Link from 'next/link';
 import './SignUp.css';
 import Image from 'next/image';
 import { supabase } from '../supabaseClient';
+import { Input } from "@/components/ui/input"
 
 function SignUp() {
   const [username, setUsername] = useState('');
@@ -69,41 +70,48 @@ function SignUp() {
           {logoUrl && <Image id="Logo-signup" src={logoUrl} alt="Food 4 Thought Logo" width={250} height={100} />}
           <br />
           <div className="Sign-up-text">Sign up</div>
+          <div className="flex flex-col space-y-2 mx-auto translate-x-8 translate-y-2">
           <form onSubmit={handleSubmit}>
-            <input
+            <Input
               type="text"
               placeholder="Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
+              className = "pr-10 focus-visible:ring-3 focus-visible:ring-orange-500 focus:border-orange-500"
             />
             <br />
-            <input
+            <Input
               type="email"
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className = "pr-10 focus-visible:ring-3 focus-visible:ring-orange-500 focus:border-orange-500"
             />
             <br />
-            <input
+            <Input
               type="password"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              className = "pr-10 focus-visible:ring-3 focus-visible:ring-orange-500 focus:border-orange-500"
             />
             <br />
-            <input
+            <Input
               type="password"
               placeholder="Confirm Password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
+              className = "pr-10 focus-visible:ring-3 focus-visible:ring-orange-500 focus:border-orange-500"
             />
             <br />
-            <button type="submit">Sign Up</button>
+            <button type="submit" className = "-translate-x-8">Sign Up</button>
           </form>
+          </div>
+          
 
           {errorMsg && <p style={{ color: 'red' }}>{errorMsg}</p>}
           {successMsg && <p style={{ color: 'green' }}>{successMsg}</p>}

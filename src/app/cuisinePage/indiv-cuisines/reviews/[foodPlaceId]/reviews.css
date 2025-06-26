@@ -1,0 +1,363 @@
+/* Layered background that’s darkened */
+.background-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background-image: url(https://images.pexels.com/photos/616401/pexels-photo-616401.jpeg?cs=srgb&dl=pexels-goumbik-616401.jpg&fm=jpg);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: brightness(0.6);
+  z-index: 0;
+}
+
+/* Content sits above the darkened background */
+.content-layer {
+  position: relative;
+  z-index: 1;
+}
+
+.DragonPalace {
+  position: relative;
+  min-height: 100vh;
+  padding-bottom: 100px; /* to prevent overlap */
+}
+
+.text-box-6 {
+  position: relative; /* Instead of absolute */
+  top: 200px;
+  left: 100px;
+  background-color: rgba(255, 255, 255, 0.822);
+  padding: 600px;
+  border-radius: 10px;
+  text-align: center;
+  font-weight: bold;
+  color: #333;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 1700px;
+  height: auto;
+}
+
+.dragon-palace-header {
+  position: absolute;
+  top: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #FFA04D;
+  padding: 10px 20px;
+  border-radius: 20px;            
+  border: 2px solid black;
+  font-family: 'Inria Serif', serif;
+  font-size: 40px;
+  font-weight: bold;
+  color: rgb(0, 0, 0);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+  text-align: center;
+}
+
+#Logo-6 {
+  height: 80px;
+  position: absolute;
+  top: 50px;
+  left: 70px;
+}
+
+#dp-img-1 {
+    position: absolute; 
+    top: 300px;
+    left: 300px;
+    width: 300px; 
+    height: 300px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+#dp-img-2 {
+    position: absolute; 
+    top: 300px;
+    right: 680px;
+    width: 300px; 
+    height: 300px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+#dp-google-map {
+    position: absolute;
+    right: 150px;
+    top: 290px;
+    border: black 2px solid;
+    border-radius: 10px;
+}
+
+#dp-google-map:hover {
+    transform: scale(1.05);
+    transition: transform 0.3s ease;
+}
+
+.dp-google-maps-text{
+    position: absolute;
+    right: 210px;
+    top: 550px;
+    background-color:#FFA04D;
+    border: black 2px solid;
+    padding: 10px;
+    border-radius: 10px;
+    font-weight: bold;
+    color: black;
+}
+
+.dp-google-maps-text:hover {
+    transform: scale(1.05);
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.Dragon-Palace-Comment-1 {
+  position: relative; 
+  z-index: 5;
+  width: 1500px;
+  right: 500px;
+  max-width: 1600px;
+  min-height: 350px;
+  margin: 2rem auto;
+  color: black;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background-color: rgb(255, 255, 255);
+  text-align: left;
+  height: auto; /* Let it grow dynamically */
+}
+
+.Dragon-Palace-Comment-1-text {
+    text-align: left;
+    font-size: 23px;
+} 
+
+.comment-1-user {
+    position: relative; 
+    top: 55px;
+    font-size: 17px;
+}
+
+#Thumbs-up-1 {
+    position: relative; 
+    left: 1000px;
+    bottom: 30px;
+}
+
+#Thumbs-down-1 {
+    position: relative; 
+    left: 1140px; 
+    bottom: 30px;
+}
+
+#Red-flag-1 {
+    position: relative; 
+    left: 1370px; 
+    bottom: 55px;
+}
+
+
+#Thumbs-up-1, 
+#Thumbs-down-1, 
+#Red-flag-1:hover {
+    cursor: pointer;
+}
+
+.back-home-button {
+    display: inline-block;
+    margin: 2 rem auto;
+    padding: 0.5rem 1rem;
+    background-color: #FFA04D;
+    color: black;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight:500;
+    cursor: pointer;
+    text-align: center;
+  }
+
+.no-reviews {
+    position: relative;
+    right: 200px;
+    top: 30px;
+    width: 1000px;
+    color: black;
+    font-size: 2rem;
+    display: inline-block;
+    margin: 2 rem auto;
+    padding: 0.5rem 1rem;
+    border-radius: 2px;
+    background-color: yellow;
+
+}
+
+.review-form-container {
+  position: relative; 
+  margin: 2rem auto;
+  right: 100px;
+  top: 20px;
+  background-color: white;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  width: 700px;
+}
+
+.review-form input,
+.review-form textarea {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.review-form textarea {
+  min-height: 100px;
+}
+
+.review-form button {
+  margin-top: 10px;
+  background-color: orange;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.comment-timestamp {
+  position: relative; 
+  top: 30px;
+  left: 250px;
+}
+
+.comment-section {
+  position: relative; 
+  top: 50px;
+}
+
+.back-button {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #fd4646;
+  color: #333;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  border: 1px solid #ddd;
+}
+
+.back-button:hover {
+  background-color: orange;
+  transform: translateY(-1px);
+}
+
+.edit-button {
+  position: relative;
+  top: 60px;
+  left: 640px;
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #4CAF50;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.edit-button, .save-button:hover {
+  background-color: #45a049;
+  transform: translateY(-1px);
+  cursor: pointer;
+}
+
+.delete-button {
+  position: relative;
+  top: 60px;
+  left: 680px;
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #f44336;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.delete-button:hover {
+  background-color: #d32f2f;
+  transform: translateY(-1px);
+  cursor: pointer;
+}
+
+.rating-stars {
+  position: relative; 
+  top: 50px;
+  display: flex;
+  justify-content: left;
+  gap: 5px;
+}
+
+.edit-comment-textarea{
+  width: 100%;
+  height: 100px;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: rgb(221, 220, 218);
+  resize: none;
+}
+
+.save-button {
+  position: relative;
+  top: 60px;
+  left: 540px;
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #4CAF50;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.save-button:hover {
+  background-color: #45a049;
+  transform: translateY(-1px);
+  cursor: pointer;
+}
+
+.cancel-button {
+  position: relative;
+  top: 60px;
+  left: 580px;
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #f44336;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.cancel-button:hover {
+  background-color: #d32f2f;
+  transform: translateY(-1px);
+  cursor: pointer;
+}

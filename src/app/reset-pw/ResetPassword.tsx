@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '../supabaseClient';
 import './ResetPassword.css';
 import Image from 'next/image';
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 function ResetPassword() {
   const router = useRouter();
@@ -80,21 +82,22 @@ function ResetPassword() {
           <br /><br /><br /><br /><br />
           <div className='Reset-pw-text'>Reset Your Password</div>
           <form onSubmit={handleResetPassword}>
-            <input
-              className="new-password"
+            <Input
               type="password"
               placeholder="New Password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
+              className = "pr-15 focus-visible:ring-3 focus-visible:ring-orange-500 focus:border-orange-500"
             />
-            <input
-              className="confirm-new-password"
+            <br />
+            <Input
               type="password"
               placeholder="Confirm New Password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
+              className = "pr-15 focus-visible:ring-3 focus-visible:ring-orange-500 focus:border-orange-500"
             />
             <button className="update-password-button" type="submit">
               Update Password
