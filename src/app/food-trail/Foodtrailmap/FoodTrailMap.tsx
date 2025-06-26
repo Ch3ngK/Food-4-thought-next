@@ -170,6 +170,7 @@ useEffect(() => {
             data: {
               type: 'Feature',
               geometry: routeGeo,
+              properties: {}
             },
           });
 
