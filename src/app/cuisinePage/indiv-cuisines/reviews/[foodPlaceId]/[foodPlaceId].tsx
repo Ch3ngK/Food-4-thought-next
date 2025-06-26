@@ -250,7 +250,7 @@ function Reviews() {
                       {review.user_id === currentUserId && (
                         <div style={{ marginTop: '10px' }}>
                           <button className='edit-button' onClick={() => startEditing(review)}>Edit</button>
-                          <button className='delete-button' onClick={() => handleDelete(review.review_id)} style={{ marginLeft: '10px' }}>Delete</button>
+                          <button className='delete-button-c' onClick={() => handleDelete(review.review_id)} style={{ marginLeft: '10px' }}>Delete</button>
                         </div>
                       )}
                     </>

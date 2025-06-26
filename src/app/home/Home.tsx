@@ -18,17 +18,6 @@ import {
 
 import { Card, CardContent } from '@/components/ui/card';
 
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-  type CarouselApi,
-} from '@/components/ui/carousel';
-
-import { Card, CardContent } from '@/components/ui/card';
-
 const imageKeys = {
   logo: 'Food4Thought.png',
   instagram: 'instagram-icon.png',
