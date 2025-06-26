@@ -1,13 +1,12 @@
-'use client';
-
-import { useSearchParams } from 'next/navigation';
-import FoodStart from './FoodStart';
-import FoodTrail from './FoodTrail';
-import './FoodTrail.css'
+import { Suspense } from 'react';
+import FoodTrailClient from './FoodTrailClient';
+import './FoodTrail.css';
 import 'leaflet/dist/leaflet.css';
 
-
-export default function FoodTrailPage() {
-    const searchParams = useSearchParams();
-    return <FoodStart />;
-  }
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading trail...</div>}>
+      <FoodTrailClient />
+    </Suspense>
+  );
+}
