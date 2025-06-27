@@ -55,8 +55,8 @@ export default function Header() {
           </strong>
         </p>
         <p>
-          {stats.total > 0 ? (
-            <>You still have <strong>{stats.visited}</strong> spots to try!</>
+          {stats.total > stats.visited ? (
+            <>You still have <strong>{stats.total - stats.visited}</strong> spots to try!</>
           ) : (
             "You've visited all the spots!"
           )}
