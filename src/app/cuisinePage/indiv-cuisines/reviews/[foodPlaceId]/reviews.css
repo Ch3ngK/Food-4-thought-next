@@ -284,7 +284,7 @@
   cursor: pointer;
 }
 
-.delete-button {
+.delete-button-c {
   position: relative;
   top: 60px;
   left: 680px;
@@ -298,7 +298,7 @@
   font-weight: 500;
 }
 
-.delete-button:hover {
+.delete-button-c:hover {
   background-color: #d32f2f;
   transform: translateY(-1px);
   cursor: pointer;
