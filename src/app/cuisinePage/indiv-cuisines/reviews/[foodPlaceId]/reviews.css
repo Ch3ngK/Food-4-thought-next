@@ -1,4 +1,4 @@
-/* Layered background that’s darkened */
+/* Layered background that's darkened */
 .background-layer {
   position: fixed;
   top: 0;
@@ -22,15 +22,15 @@
 .DragonPalace {
   position: relative;
   min-height: 100vh;
-  padding-bottom: 100px; /* to prevent overlap */
+  padding-bottom: 100px;
 }
 
 .text-box-6 {
-  position: relative; /* Instead of absolute */
+  position: relative;
   top: 200px;
   left: 100px;
   background-color: rgba(255, 255, 255, 0.822);
-  padding: 600px;
+  padding: 2rem 3rem 600px;
   border-radius: 10px;
   text-align: center;
   font-weight: bold;
@@ -42,10 +42,12 @@
 }
 
 .dragon-palace-header {
-  position: absolute;
-  top: 120px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  margin: 0 auto 2rem;
+  display: inline-block;
   background-color: #FFA04D;
   padding: 10px 20px;
   border-radius: 20px;            
@@ -67,297 +69,487 @@
 }
 
 #dp-img-1 {
-    position: absolute; 
-    top: 300px;
-    left: 300px;
-    width: 300px; 
-    height: 300px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    border-radius: 10px;
+  position: relative; 
+  top: auto;
+  left: auto;
+  width: 300px; 
+  height: 300px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
 }
 
 #dp-img-2 {
-    position: absolute; 
-    top: 300px;
-    right: 680px;
-    width: 300px; 
-    height: 300px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    border-radius: 10px;
+  position: relative; 
+  top: auto;
+  right: auto;
+  width: 300px; 
+  height: 300px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
 }
 
 #dp-google-map {
-    position: absolute;
-    right: 150px;
-    top: 290px;
-    border: black 2px solid;
-    border-radius: 10px;
+  position: relative;
+  right: auto;
+  top: auto;
+  display: block;
+  border: black 2px solid;
+  border-radius: 8px;
 }
+
 
 #dp-google-map:hover {
-    transform: scale(1.05);
-    transition: transform 0.3s ease;
+  transform: scale(1.05);
+  transition: transform 0.3s ease;
 }
 
-.dp-google-maps-text{
-    position: absolute;
-    right: 210px;
-    top: 550px;
-    background-color:#FFA04D;
-    border: black 2px solid;
-    padding: 10px;
-    border-radius: 10px;
-    font-weight: bold;
-    color: black;
+.dp-google-maps-text {
+  position: relative;
+  left: 330px;
+  top: auto;
+  margin-top: 1rem;
+  text-align: center;
+  display: inline-block;
+  background-color:#FFA04D;
+  border: black 2px solid;
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: bold;
+  color: black;
 }
 
 .dp-google-maps-text:hover {
-    transform: scale(1.05);
-    transition: transform 0.3s ease;
-    cursor: pointer;
+  transform: scale(1.05);
+  transition: transform 0.3s ease;
+  cursor: pointer;
 }
 
-.Dragon-Palace-Comment-1 {
-  position: relative; 
-  z-index: 5;
-  width: 1500px;
-  right: 500px;
-  max-width: 1600px;
-  min-height: 350px;
-  margin: 2rem auto;
-  color: black;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  background-color: rgb(255, 255, 255);
-  text-align: left;
-  height: auto; /* Let it grow dynamically */
+.dp-google-maps-text:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
-.Dragon-Palace-Comment-1-text {
-    text-align: left;
-    font-size: 23px;
-} 
-
-.comment-1-user {
-    position: relative; 
-    top: 55px;
-    font-size: 17px;
+.review-card {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  right: 0;
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
 }
 
-#Thumbs-up-1 {
-    position: relative; 
-    left: 1000px;
-    bottom: 30px;
+.review-content {
+  flex: 1;
 }
 
-#Thumbs-down-1 {
-    position: relative; 
-    left: 1140px; 
-    bottom: 30px;
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
 }
 
-#Red-flag-1 {
-    position: relative; 
-    left: 1370px; 
-    bottom: 55px;
+.review-username {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.review-timestamp {
+  color: #777;
+  font-size: 0.85rem;
+}
+
+.review-rating {
+  margin: 0.5rem 0;
+}
+
+.review-text {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #333;
+  margin: 1rem 0;
+}
+
+.review-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.review-voting {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* .review-voting {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+} */
+
+/* .vote-button {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.vote-button:hover {
+  background-color: #f5f5f5;
+}
+
+.vote-count {
+  font-size: 0.9rem;
+  color: #555;
+} */
+
+.upvote-button {
+  color: #4CAF50;
+}
+
+.downvote-button {
+  color: #F44336;
+}
+
+.upvote-button.active {
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.downvote-button.active {
+  background-color: rgba(244, 67, 54, 0.1);
+}
+
+.vote-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 
-#Thumbs-up-1, 
-#Thumbs-down-1, 
-#Red-flag-1:hover {
-    cursor: pointer;
+.vote-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
-.back-home-button {
-    display: inline-block;
-    margin: 2 rem auto;
-    padding: 0.5rem 1rem;
-    background-color: #FFA04D;
-    color: black;
-    border: none;
-    border-radius: 5px;
-    text-decoration: none;
-    font-size: 1rem;
-    font-weight:500;
-    cursor: pointer;
-    text-align: center;
-  }
+.vote-button.active {
+  background-color: rgba(0, 0, 0, 0.1);
+}
 
-.no-reviews {
-    position: relative;
-    right: 200px;
-    top: 30px;
-    width: 1000px;
-    color: black;
-    font-size: 2rem;
-    display: inline-block;
-    margin: 2 rem auto;
-    padding: 0.5rem 1rem;
-    border-radius: 2px;
-    background-color: yellow;
+.vote-count {
+  font-size: 0.9em;
+  font-weight: 500;
+}
 
+/* .flag-button {
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.flag-button:hover {
+  background-color: #f5f5f5;
+}*/
+
+.flag-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #666;
+}
+
+.flag-button:hover {
+  color: #333;
+}
+
+.star-rating-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.star-wrapper {
+  position: relative;
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+.star-wrapper.editable {
+  cursor: pointer;
+}
+
+.half-star-button {
+  position: absolute;
+  right: -10px;
+  top: -10px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #FFD700;
+  color: white;
+  border: none;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.star-wrapper:hover .half-star-button {
+  opacity: 1;
+}
+
+.rating-text {
+  font-size: 0.9rem;
+  color: #777;
+  margin-left: 0.5rem;
 }
 
 .review-form-container {
-  position: relative; 
-  margin: 2rem auto;
-  right: 100px;
+  position: relative;
+  margin: 0 auto;
+  left: 0px;
   top: 20px;
   background-color: white;
-  padding: 1rem;
-  border-radius: 10px;
+  padding: 1.5rem;
+  border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  width: 700px;
+  align-items: center;
+  width: 90%;
+  max-width: 100%;
+}
+
+.review-form-container h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #444;
+  font-size: 0.95rem;
 }
 
 .review-form input,
 .review-form textarea {
-  display: block;
+  align-items: center;
   width: 100%;
-  margin-top: 10px;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.review-form input:focus,
+.review-form textarea:focus {
+  outline: none;
+  border-color: #FFA04D;
 }
 
 .review-form textarea {
-  min-height: 100px;
+  min-height: 120px;
+  resize: vertical;
 }
 
-.review-form button {
-  margin-top: 10px;
-  background-color: orange;
+.submit-review-button {
+  background-color: #FFA04D;
   color: white;
   border: none;
-  padding: 10px 15px;
-  border-radius: 6px;
+  padding: 0.8rem 1.2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+  margin-top: 0.5rem;
 }
 
-.comment-timestamp {
-  position: relative; 
-  top: 30px;
-  left: 250px;
+.submit-review-button:hover {
+  background-color: #ff8c2e;
+  transform: translateY(-1px);
 }
 
-.comment-section {
-  position: relative; 
-  top: 50px;
+.edit-review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.edit-rating-container {
+  margin: 0.5rem 0;
+}
+
+.edit-form-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.back-button,
+.edit-button,
+.delete-button-c,
+.save-button,
+.cancel-button {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  font-size: 0.9rem;
 }
 
 .back-button {
-  display: inline-block;
-  padding: 8px 16px;
   background-color: #fd4646;
-  color: #333;
+  color: white;
   text-decoration: none;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-  font-weight: 500;
-  border: 1px solid #ddd;
+  margin-top: 1rem;
 }
 
 .back-button:hover {
-  background-color: orange;
+  background-color: #ff2e2e;
   transform: translateY(-1px);
 }
 
 .edit-button {
-  position: relative;
-  top: 60px;
-  left: 640px;
-  display: inline-block;
-  padding: 8px 16px;
   background-color: #4CAF50;
   color: white;
-  text-decoration: none;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-  font-weight: 500;
 }
 
-.edit-button, .save-button:hover {
+.edit-button:hover {
   background-color: #45a049;
   transform: translateY(-1px);
-  cursor: pointer;
 }
 
 .delete-button-c {
-  position: relative;
-  top: 60px;
-  left: 680px;
-  display: inline-block;
-  padding: 8px 16px;
   background-color: #f44336;
   color: white;
-  text-decoration: none;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-  font-weight: 500;
 }
 
 .delete-button-c:hover {
   background-color: #d32f2f;
   transform: translateY(-1px);
-  cursor: pointer;
-}
-
-.rating-stars {
-  position: relative; 
-  top: 50px;
-  display: flex;
-  justify-content: left;
-  gap: 5px;
-}
-
-.edit-comment-textarea{
-  width: 100%;
-  height: 100px;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  background-color: rgb(221, 220, 218);
-  resize: none;
 }
 
 .save-button {
-  position: relative;
-  top: 60px;
-  left: 540px;
-  display: inline-block;
-  padding: 8px 16px;
   background-color: #4CAF50;
   color: white;
-  text-decoration: none;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-  font-weight: 500;
 }
 
 .save-button:hover {
   background-color: #45a049;
   transform: translateY(-1px);
-  cursor: pointer;
 }
 
 .cancel-button {
-  position: relative;
-  top: 60px;
-  left: 580px;
-  display: inline-block;
-  padding: 8px 16px;
   background-color: #f44336;
   color: white;
-  text-decoration: none;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-  font-weight: 500;
 }
 
 .cancel-button:hover {
   background-color: #d32f2f;
   transform: translateY(-1px);
-  cursor: pointer;
+}
+
+.no-reviews {
+  position: relative;
+  right: 0px;
+  top: 30px;
+  width: 1000px;
+  color: black;
+  font-size: 1.5rem;
+  display: inline-block;
+  margin: 2rem auto;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: rgb(255, 255, 0);
+  text-align: center;
+}
+
+.comment-section {
+  width: 80%;
+  margin: 0 auto;
+  max-width: 1600px;
+}
+
+.edit-comment-textarea {
+  width: 100%;
+  height: 120px;
+  padding: 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background-color: #f9f9f9;
+  resize: vertical;
+  font-size: 1rem;
+}
+
+.foodplace-content-container {
+  display: flex;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.foodplace-images-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: relative;
+  max-width: 350px;
+}
+
+.comments-main-container {
+  flex: 2;
+  min-width: 0; 
+}
+
+.comments-outer-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.top-images-container {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
 }

@@ -17,7 +17,7 @@ export default function FoodTrailPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if user has any locations
+    // check if user has any locations
     const checkLocations = async () => {
       const { count } = await supabase
         .from('food_trail_locations')

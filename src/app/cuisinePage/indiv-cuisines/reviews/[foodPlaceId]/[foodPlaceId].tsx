@@ -16,6 +16,7 @@ interface Review {
   downvotes: number;
   rating: number;
   user_id: string | null;
+  user_vote?: 'upvote' | 'downvote' | null;
 }
 
 function Reviews() {
@@ -27,12 +28,118 @@ function Reviews() {
   const [newReview, setNewReview] = useState('');
   const [username, setUsername] = useState('');
   const [rating, setRating] = useState<number>(0);
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [editingReviewId, setEditingReviewId] = useState<number | null>(null);
   const [editedComment, setEditedComment] = useState('');
   const [editedRating, setEditedRating] = useState<number>(0);
+  const [editedHoverRating, setEditedHoverRating] = useState<number | null>(null);
 
-  // Fetch current user
+  const fetchReviews = async () => {
+    if (!foodPlaceId) return;
+
+    const { data: reviewsData, error } = await supabase
+      .from('reviews')
+      .select(`
+        *,
+        review_votes!left(vote_type)
+      `)
+      .eq('food_places_id', foodPlaceId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching reviews:', error);
+      return;
+    }
+
+    if (reviewsData) {
+      // Transform data to include user's vote status
+      const transformedReviews = reviewsData.map(review => ({
+        ...review,
+        user_vote: review.review_votes?.length > 0 
+          ? review.review_votes[0].vote_type 
+          : null
+      }));
+      
+      setReviews(transformedReviews);
+    }
+  };
+
+  const StarRating = ({ 
+    value, 
+    onRate, 
+    onHover, 
+    onLeave,
+    editable = true,
+    size = 24 
+  }: {
+    value: number;
+    onRate: (rating: number) => void;
+    onHover: (rating: number | null) => void;
+    onLeave: () => void;
+    editable?: boolean;
+    size?: number;
+  }) => {
+    return (
+      <div className="star-rating-container">
+        {[1, 2, 3, 4, 5].map((star) => {
+          const isFilled = star <= value;
+          const isHalf = star - 0.5 === value;
+          
+          return (
+            <div 
+              key={star} 
+              className={`star-wrapper ${editable ? 'editable' : ''}`}
+              onMouseEnter={() => editable && onHover(star)}
+              onMouseLeave={() => editable && onLeave()}
+              onClick={() => editable && onRate(star)}
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 24 24" 
+                width={size} 
+                height={size}
+                fill={isFilled ? "#FFD700" : "none"}
+                stroke="#FFD700"
+                strokeWidth="2"
+              >
+                // generated the stars with the help of chatgpt
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                {isHalf && (
+                  <defs>
+                    <linearGradient id={`half-star-${star}`} x1="0" x2="100%" y1="0" y2="0">
+                      <stop offset="50%" stopColor="#FFD700" />
+                      <stop offset="50%" stopColor="transparent" />
+                    </linearGradient>
+                  </defs>
+                )}
+                {isHalf && (
+                  <polygon 
+                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" 
+                    fill={`url(#half-star-${star})`}
+                  />
+                )}
+              </svg>
+              {editable && star < 5 && (
+                <button 
+                  className="half-star-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRate(star + 0.5);
+                  }}
+                >
+                  +
+                </button>
+              )}
+            </div>
+          );
+        })}
+        <span className="rating-text">{value.toFixed(1)}</span>
+      </div>
+    );
+  };
+
+  // fetch current user
   useEffect(() => {
     const getUser = async () => {
       const {
@@ -43,7 +150,7 @@ function Reviews() {
     getUser();
   }, []);
 
-  // Fetch place info + reviews
+  // fetch place info + reviews
   useEffect(() => {
     if (!foodPlaceId) return;
 
@@ -67,20 +174,14 @@ function Reviews() {
         redFlag: supabase.storage.from('pictures').getPublicUrl('red-flag.png').data.publicUrl,
       });
 
-      const { data: reviewsData } = await supabase
-        .from('reviews')
-        .select('*')
-        .eq('food_places_id', foodPlaceId)
-        .order('created_at', { ascending: false });
-
-      if (reviewsData) setReviews(reviewsData);
+      await fetchReviews();
       setIsMounted(true);
     };
 
     fetchData();
-  }, [foodPlaceId]);
+  }, [foodPlaceId, currentUserId]); 
 
-  // Submit new review
+  // submit new review
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newReview || !username || !foodPlaceId) return;
@@ -122,21 +223,159 @@ function Reviews() {
     setRating(0);
   };
 
-  const handleVote = async (reviewId: number, type: 'upvote' | 'downvote') => {
-    const field = type === 'upvote' ? 'upvotes' : 'downvotes';
-    const { error } = await supabase.rpc(`increment_review_${field}`, {
-      review_id_input: reviewId,
-    });
-
-    if (error) {
-      console.error('Vote error:', error);
+  const handleVote = async (reviewId: number, voteType: 'upvote' | 'downvote') => {
+    if (!currentUserId) {
+      alert('Please log in to vote');
       return;
     }
 
-    setReviews(prev =>
-      prev.map(r =>
-        r.review_id === reviewId ? { ...r, [field]: r[field] + 1 } : r
-      )
+    try {
+      const review = reviews.find(r => r.review_id === reviewId);
+      if (!review) return;
+
+      const currentVote = review.user_vote;
+      let newUpvotes = review.upvotes;
+      let newDownvotes = review.downvotes;
+      let newVoteType: 'upvote' | 'downvote' | null = voteType;
+
+      // determine the new vote state
+      if (currentVote === voteType) {
+        // user unvotes
+        newVoteType = null;
+        if (voteType === 'upvote') newUpvotes -= 1;
+        else newDownvotes -= 1;
+      } else if (currentVote) {
+        // user change their vote
+        if (voteType === 'upvote') {
+          newUpvotes += 1;
+          newDownvotes -= 1;
+        } else {
+          newUpvotes -= 1;
+          newDownvotes += 1;
+        }
+      } else {
+        // new vote
+        if (voteType === 'upvote') newUpvotes += 1;
+        else newDownvotes += 1;
+      }
+
+      // update the database
+      if (newVoteType === null) {
+        // delete the vote
+        await supabase
+          .from('review_votes')
+          .delete()
+          .eq('review_id', reviewId)
+          .eq('user_id', currentUserId);
+      } else if (currentVote) {
+        // update the existing vote
+        await supabase
+          .from('review_votes')
+          .update({ vote_type: newVoteType })
+          .eq('review_id', reviewId)
+          .eq('user_id', currentUserId);
+      } else {
+        // insert the new vote
+        await supabase
+          .from('review_votes')
+          .insert([{
+            review_id: reviewId,
+            user_id: currentUserId,
+            vote_type: newVoteType
+          }]);
+      }
+
+      // update the review counts
+      await supabase
+        .from('reviews')
+        .update({
+          upvotes: newUpvotes,
+          downvotes: newDownvotes
+        })
+        .eq('review_id', reviewId);
+
+      // update local state of the code
+      setReviews(prev =>
+        prev.map(r =>
+          r.review_id === reviewId
+            ? {
+                ...r,
+                upvotes: newUpvotes,
+                downvotes: newDownvotes,
+                user_vote: newVoteType
+              }
+            : r
+        )
+      );
+    } catch (error) {
+      console.error('Error handling vote:', error);
+    }
+  };
+
+  // renderVoteButtons function for visuals (got help from deepseek with the svg icons and colours)
+  const renderVoteButtons = (review: Review) => {
+    const hasUpvoted = review.user_vote === 'upvote';
+    const hasDownvoted = review.user_vote === 'downvote';
+
+    return (
+      <div className="review-voting">
+        <button 
+        className={`vote-button upvote-button ${hasUpvoted ? 'active' : ''}`}
+        onClick={() => handleVote(review.review_id, 'upvote')}
+        aria-label="Upvote"
+      >
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill={hasUpvoted ? "#4CAF50" : "none"}
+          stroke={hasUpvoted ? "#4CAF50" : "currentColor"}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          {/** svg generated by deepseek ai */}
+          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+        </svg>
+        <span className="vote-count">{review.upvotes}</span>
+      </button>
+        
+      <button 
+        className={`vote-button downvote-button ${hasDownvoted ? 'active' : ''}`}
+        onClick={() => handleVote(review.review_id, 'downvote')}
+        aria-label="Downvote"
+      >
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill={hasDownvoted ? "#F44336" : "none"}
+          stroke={hasDownvoted ? "#F44336" : "currentColor"}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          {/** svg generated by deepseek ai */}
+          <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" />
+        </svg>
+        <span className="vote-count">{review.downvotes}</span>
+      </button>
+        
+        <button className="flag-button" title="Flag for inappropriate content">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            {/** svg generated by deepseek ai */}
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+            <line x1="4" y1="22" x2="4" y2="15" />
+          </svg>
+        </button>
+      </div>
     );
   };
 
@@ -184,7 +423,7 @@ function Reviews() {
       .from('reviews')
       .delete()
       .eq('review_id', reviewId)
-      .eq('user_id', currentUserId); // secure delete
+      .eq('user_id', currentUserId);
 
     if (error) {
       console.error('Delete error:', error);
@@ -203,76 +442,89 @@ function Reviews() {
         <Image id="Logo-6" src={imageUrls.logo} alt="Logo" width={240} height={80} />
         <div className="text-box-6">
           <div className="dragon-palace-header">{foodPlaceName}</div>
-          <Image id="dp-img-1" src={imageUrls.dpImg1} alt="Image 1" width={300} height={300} />
-          <Image id="dp-img-2" src={imageUrls.dpImg2} alt="Image 2" width={300} height={300} />
-          <Image id="dp-google-map" src={imageUrls.dpMap} alt="Map" width={300} height={200} />
-          <Link href="#" className="dp-google-maps-text">View on Google Maps</Link>
-
+            <div className="top-images-container">
+              <Image id="dp-img-1" src={imageUrls.dpImg1} alt="Image 1" width={300} height={300} />
+              <Image id="dp-img-2" src={imageUrls.dpImg2} alt="Image 2" width={300} height={300} />
+              <Image id="dp-google-map" src={imageUrls.dpMap} alt="Map" width={300} height={200} />
+              
+            </div>
+            <Link href="../mapsPage" className="dp-google-maps-text">View on Google Maps</Link>
+         <div className="comments-outer-container">
           <div className="comment-section">
             {reviews.length === 0 ? (
               <div className="no-reviews">No reviews yet.</div>
             ) : (
               reviews.map((review) => (
-                <div className="Dragon-Palace-Comment-1" key={review.review_id}>
+                <div className="review-card" key={review.review_id}>
                   {editingReviewId === review.review_id ? (
-                    <form onSubmit={(e) => handleEditSubmit(e, review.review_id)}>
+                    <form onSubmit={(e) => handleEditSubmit(e, review.review_id)} className="edit-review-form">
                       <textarea
                         className="edit-comment-textarea"
                         value={editedComment}
                         onChange={(e) => setEditedComment(e.target.value)}
                         required
                       />
-                      <select
-                        value={editedRating}
-                        onChange={(e) => setEditedRating(parseFloat(e.target.value))}
-                      >
-                        {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map((star) => (
-                          <option key={star} value={star}>
-                            {star} {star === 1 ? 'Star' : 'Stars'}
-                          </option>
-                        ))}
-                      </select>
-                      <button className='save-button' type="submit">Save</button>
-                      <button className='cancel-button' type="button" onClick={() => setEditingReviewId(null)}>Cancel</button>
+                      <div className="edit-rating-container">
+                        <StarRating 
+                          value={editedHoverRating || editedRating} 
+                          onRate={setEditedRating}
+                          onHover={setEditedHoverRating}
+                          onLeave={() => setEditedHoverRating(null)}
+                        />
+                      </div>
+                      <div className="edit-form-actions">
+                        <button className='save-button' type="submit">Save</button>
+                        <button className='cancel-button' type="button" onClick={() => setEditingReviewId(null)}>Cancel</button>
+                      </div>
                     </form>
                   ) : (
                     <>
-                      <div className="Dragon-Palace-Comment-1-text">{review.review_comments}</div>
-                      <div className="comment-1-user">By: {review.review_username}</div>
-                      <span className="comment-timestamp">{new Date(review.created_at).toLocaleString()}</span>
-                      <div className="rating-stars">
-                        {Array.from({ length: 5 }, (_, i) => {
-                          const full = review.rating >= i + 1;
-                          const half = review.rating >= i + 0.5 && review.rating < i + 1;
-                          return <span key={i}>{full ? '⭐' : half ? '⯨' : '☆'}</span>;
-                        })}
-                      </div>
-                      {review.user_id === currentUserId && (
-                        <div style={{ marginTop: '10px' }}>
-                          <button className='edit-button' onClick={() => startEditing(review)}>Edit</button>
-                          <button className='delete-button-c' onClick={() => handleDelete(review.review_id)} style={{ marginLeft: '10px' }}>Delete</button>
+                      <div className="review-content">
+                        <div className="review-header">
+                          <div className="review-username">By: {review.review_username}</div>
+                          <div className="review-timestamp">{new Date(review.created_at).toLocaleString()}</div>
                         </div>
-                      )}
+                        
+                        <div className="review-rating">
+                          <StarRating 
+                            value={review.rating} 
+                            onRate={() => {}} 
+                            onHover={() => {}} 
+                            onLeave={() => {}} 
+                            editable={false}
+                            size={20}
+                          />
+                        </div>
+                        
+                        <div className="review-text">{review.review_comments}</div>
+                        
+                        {review.user_id === currentUserId && (
+                          <div className="review-actions">
+                            <button className='edit-button' onClick={() => startEditing(review)}>Edit</button>
+                            <button className='delete-button-c' onClick={() => handleDelete(review.review_id)}>Delete</button>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="review-voting">
+                        {renderVoteButtons(review)}
+                        { /** <div className="vote-button" onClick={() => handleVote(review.review_id, 'upvote')}>
+                          <Image src={imageUrls.thumbsUp} alt="thumbs up" width={24} height={24} />
+                          <span className="vote-count">{review.upvotes || 0}</span>
+                        </div>
+                        
+                        <div className="vote-button" onClick={() => handleVote(review.review_id, 'downvote')}>
+                          <Image src={imageUrls.thumbsDown} alt="thumbs down" width={24} height={24} />
+                          <span className="vote-count">{review.downvotes || 0}</span>
+                        </div>
+                        
+                        <div className="flag-button" title="Flag for inappropriate content">
+                          <Image src={imageUrls.redFlag} alt="red flag" width={24} height={24} />
+                        </div>
+                        **/}
+                      </div>
                     </>
                   )}
-
-                  {/* Voting */}
-                  <span
-                    style={{ cursor: 'pointer', position: 'relative', display: 'inline-block', width: '40px', height: '20px' }}
-                    onClick={() => handleVote(review.review_id, 'upvote')}
-                  >
-                    <Image id="Thumbs-up-1" src={imageUrls.thumbsUp} alt="thumbs up" width={40} height={20} />
-                    <span style={{ position: 'absolute', bottom: '20px', left: '1060px' }}>{review.upvotes || 0}</span>
-                  </span>
-                  <span
-                    style={{ cursor: 'pointer', position: 'relative', display: 'inline-block', width: '40px', height: '20px' }}
-                    onClick={() => handleVote(review.review_id, 'downvote')}
-                  >
-                    <Image id="Thumbs-down-1" src={imageUrls.thumbsDown} alt="thumbs down" width={40} height={20} />
-                    <span style={{ position: 'absolute', bottom: '20px', left: '1200px' }}>{review.downvotes || 0}</span>
-                  </span>
-
-                  <Image id="Red-flag-1" src={imageUrls.redFlag} alt="red flag" width={40} height={20} title="Flag for inappropriate content" />
                 </div>
               ))
             )}
@@ -280,19 +532,45 @@ function Reviews() {
             <div className="review-form-container">
               <h3>Leave a Review</h3>
               <form onSubmit={handleSubmit} className="review-form">
-                <input type="text" placeholder="Your name" value={username} onChange={(e) => setUsername(e.target.value)} required />
-                <textarea placeholder="Your review" value={newReview} onChange={(e) => setNewReview(e.target.value)} required />
-                <select value={rating} onChange={(e) => setRating(parseFloat(e.target.value))} required>
-                  <option value="">Select a rating</option>
-                  {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map((star) => (
-                    <option key={star} value={star}>{star} {star === 1 ? 'Star' : 'Stars'}</option>
-                  ))}
-                </select>
-                <button type="submit">Submit</button>
+                <div className="form-group">
+                  <label htmlFor="username">Your Name</label>
+                  <input 
+                    type="text" 
+                    id="username"
+                    placeholder="Enter your name" 
+                    value={username} 
+                    onChange={(e) => setUsername(e.target.value)} 
+                    required 
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="review">Your Review</label>
+                  <textarea 
+                    id="review"
+                    placeholder="Share your experience..." 
+                    value={newReview} 
+                    onChange={(e) => setNewReview(e.target.value)} 
+                    required 
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Rating</label>
+                  <StarRating 
+                    value={hoverRating || rating} 
+                    onRate={setRating}
+                    onHover={setHoverRating}
+                    onLeave={() => setHoverRating(null)}
+                  />
+                </div>
+                
+                <button type="submit" className="submit-review-button">Submit Review</button>
               </form>
-              <br />
+              
               <Link href="/cuisinePage" className="back-button">Back</Link>
             </div>
+          </div>
           </div>
         </div>
       </div>

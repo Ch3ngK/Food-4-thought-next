@@ -26,7 +26,7 @@ function SweeChoonGmaps() {
     fetchLogo();
   }, [hasMounted]);
 
-  if (!hasMounted) return null; // Avoid hydration mismatch
+  if (!hasMounted) return null;
 
   return (
     <div className='Swee-Choon-Gmaps'>

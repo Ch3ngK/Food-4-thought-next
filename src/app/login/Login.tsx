@@ -6,8 +6,14 @@ import './Login.css';
 import Image from 'next/image';
 import Link from 'next/link';
 import { supabase } from '../supabaseClient';
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AlertCircleIcon, CheckCircle2Icon } from 'lucide-react';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
 
 function Login() {
   const router = useRouter();
@@ -19,6 +25,7 @@ function Login() {
   const [passIconUrl, setPassIconUrl] = useState('');
   const [chefUrl, setChefUrl] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);  
 
   useEffect(() => {
     const loadImages = async () => {
@@ -37,21 +44,54 @@ function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    setErrorMsg('');
+    setShowSuccessAlert(false);
 
-    if (error) {
-      setErrorMsg(error.message);
-    } else {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setShowSuccessAlert(true);
+      
+      await new Promise(resolve => setTimeout(resolve, 700));
       router.push('./home');
-      alert("Successful Login!");
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMsg(error.message);
+      } else {
+        setErrorMsg('An unknown error occurred during login');
+      }
     }
   };
 
   return (
     <div className="App">
+      <div className="fixed top-0 left-0 right-0 flex justify-center z-50 pt-4">
+      <div className="w-full max-w-md px-4">
+      {showSuccessAlert && (
+        <Alert className="mb-4 bg-green-100 border-green-200 text-green-700 animate-slideDown">
+          <CheckCircle2Icon className="h-4 w-4 text-green-500" />
+          <AlertTitle>Successful Login!</AlertTitle>
+          <AlertDescription>Redirecting you to the home page...</AlertDescription>
+        </Alert>
+        )}
+
+        {errorMsg && (
+          <Alert variant="destructive" className="mb-0 animate-slideDown">
+            <AlertCircleIcon className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{errorMsg}. Please try logging in again. </AlertDescription>
+          </Alert>
+          )}
+      </div>
+      </div>
+
       <header className="App-header">
         <div className="background-img-0"></div>
         <div className="text-box">
@@ -61,6 +101,9 @@ function Login() {
           {logoUrl && <Image id="Logo" src={logoUrl} alt="Logo" width={250} height={100} />}
           <div className="Login-text">Login</div>
           <br /><br />
+
+          
+
           <form onSubmit={handleLogin}>
             <div className = "w-full max-w-sm space-y-30">
               <div className="relative space-y-2">
@@ -92,7 +135,7 @@ function Login() {
             </div>
             <button type="submit" className="Login-button">Login</button>
           </form>
-          {errorMsg && <div className="error-message">{errorMsg}</div>}
+
           <br /><br />
           <div className="Checkbox-container">
             <input 

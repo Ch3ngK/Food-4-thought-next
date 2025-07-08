@@ -6,6 +6,7 @@ import { supabase } from '@/app/supabaseClient';
 
 export default function Header() {
   const [name, setName] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
   const [stats, setStats] = useState({ total: 0, visited: 0 });
   const searchParams = useSearchParams();
 
@@ -37,11 +38,29 @@ export default function Header() {
     fetchStats();
   }, []);
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error('Error fetching user:', error);
+        return;
+      }
 
-  const handleNameClick = () => {
+      if (user) {
+        const fetchedUsername = user.user_metadata?.username || user.email;
+        setUsername(fetchedUsername);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+
+  /** const handleNameClick = () => {
     const input = prompt("What is your name?");
     if (input) setName(input);
   };
+  */
 
   return (
     <header>
@@ -49,10 +68,7 @@ export default function Header() {
       <div className="HeaderBox">
         <h2>Overview</h2>
         <p>
-          Hello,{" "}
-          <strong role="button" onClick={handleNameClick}>
-            {name ?? "Guest"}
-          </strong>
+          Hello, {username ? username : 'Guest'}
         </p>
         <p>
           {stats.total > stats.visited ? (

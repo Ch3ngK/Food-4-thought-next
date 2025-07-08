@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { supabase } from '../supabaseClient';
 import { useRouter } from 'next/navigation';
+import ProtectedRoute from '../auth/ProtectedRoute';
 
 import {
   Carousel,
@@ -127,6 +128,7 @@ function Home() {
   };
 
   return (
+    <ProtectedRoute>
     <div className="Home">
       <div className="background-img-1"></div>
       <div className="Grey-box-1">
@@ -230,6 +232,7 @@ function Home() {
         <div className="Quote">~Redefining food discovery~</div>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }
 
