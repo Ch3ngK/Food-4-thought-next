@@ -32,6 +32,7 @@ const PopularItems = [
 // Popular Food Trails Data
 const PopularTrails = [
   {
+    slug: 'hawker-delights',
     name: 'Singapore Hawker Delights',
     description: 'Explore the best of Singaporean street food across 5 iconic hawker centers.',
     imageUrl: 'https://uziezeevvajhdsxkumse.supabase.co/storage/v1/object/public/pictures//hawker-trail.jpeg',
@@ -40,6 +41,7 @@ const PopularTrails = [
     rating: 4.9
   },
   {
+    slug: 'chinatown-food-adventure',
     name: 'Chinatown Food Adventure',
     description: 'A culinary journey through Singapore\'s vibrant Chinatown district.',
     imageUrl: 'https://uziezeevvajhdsxkumse.supabase.co/storage/v1/object/public/pictures//chinatown-trail.jpeg',
@@ -48,6 +50,7 @@ const PopularTrails = [
     rating: 4.7
   },
   {
+    slug: 'little-india-spice-trail',
     name: 'Little India Spice Trail',
     description: 'Discover the rich flavors and spices of Indian cuisine in this immersive trail.',
     imageUrl: 'https://uziezeevvajhdsxkumse.supabase.co/storage/v1/object/public/pictures//india-trail.jpeg',
@@ -87,7 +90,7 @@ export default function Popular() {
               <div className="food-item-name">{item.name}</div>
               <div className="food-item-description">{item.description}</div>
               <div className="rating" style={{ margin: '10px 15px', fontSize: '14px' }}>
-                {"★".repeat(Math.floor(item.rating))}{"☆".repeat(5-Math.floor(item.rating))} {item.rating} ({item.reviews} reviews)
+                {"★".repeat(Math.floor(item.rating))}{"☆".repeat(5 - Math.floor(item.rating))} {item.rating} ({item.reviews} reviews)
               </div>
             </div>
           ))}
@@ -114,21 +117,23 @@ export default function Popular() {
                 <span><strong>Stops:</strong> {trail.stops}</span>
               </div>
               <div className="rating" style={{ margin: '10px 15px', fontSize: '14px' }}>
-                {"★".repeat(Math.floor(trail.rating))}{"☆".repeat(5-Math.floor(trail.rating))} {trail.rating}
+                {"★".repeat(Math.floor(trail.rating))}{"☆".repeat(5 - Math.floor(trail.rating))} {trail.rating}
               </div>
-              <button style={{
-                margin: '10px 15px',
-                padding: '8px 0',
-                width: 'calc(100% - 30px)',
-                backgroundColor: '#e74c3c',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                fontWeight: 'bold'
-              }}>
-                Explore Trail
-              </button>
+              <Link href={`/popular/food-trail-sharing/${encodeURIComponent(trail.slug)}`} passHref>
+                <button style={{
+                  margin: '10px 15px',
+                  padding: '8px 0',
+                  width: 'calc(100% - 30px)',
+                  backgroundColor: '#e74c3c',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}>
+                  Explore Trail
+                </button>
+              </Link>
             </div>
           ))}
         </div>
@@ -141,4 +146,3 @@ export default function Popular() {
     </div>
   );
 }
-

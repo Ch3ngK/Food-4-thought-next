@@ -6,8 +6,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import './FoodTrailMap.css';
 import Image from 'next/image';
+import { supabase } from '@/app/supabaseClient';
 
-mapboxgl.accessToken = 'pk.eyJ1Ijoia3c0NTYiLCJhIjoiY21idWF2YXZ3MGQ5dTJrcHU3OXNmeTF4ayJ9.FOm1RDktfh41mC-BY8woNA';
+mapboxgl.accessToken = 'pk.eyJ1Ijoia3c0NTYiLCJhIjoiY21idWF2YXZ3MGQ5dTJrcHU3OXNmeTF4ayJ9.FOm1RDktfh41mC-BY8woNA';  
 
 const FOURSQUARE_API_KEY = process.env.NEXT_PUBLIC_FOURSQUARE_API_KEY;
 
@@ -29,12 +30,39 @@ export default function FoodTrailMap() {
   const [mode, setMode] = useState<'driving' | 'walking' | 'cycling'>('walking');
   const imageURL = 'https://uziezeevvajhdsxkumse.supabase.co/storage/v1/object/public/pictures//Food4Thought.png';
 
-useEffect(() => {
+  useEffect(() => {
   const fetchLocations = async () => {
-    const locParams = searchParams.getAll('location');
-    const fetched: Location[] = [];
+    const locParam = searchParams.get('locations');
+    let locNames: string[] = [];
 
-    for (const name of locParams) {
+    if (locParam) {
+      // ✅ Case 1: Locations passed via URL
+      locNames = locParam.split(',').map((loc) => loc.trim());
+    } else {
+      // ✅ Case 2: Fallback to Supabase (User-created trails)
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data, error } = await supabase
+          .from('food_trail_locations')
+          .select('title')
+          .eq('user_id', user.id);
+        
+        if (error) {
+          console.error("Error fetching locations from Supabase:", error);
+          return;
+        }
+
+        locNames = data.map((loc: any) => loc.title);
+      } catch (err) {
+        console.error("Auth error or Supabase issue:", err);
+        return;
+      }
+    }
+
+    const fetched: Location[] = [];
+    for (const name of locNames) {
       try {
         const res = await fetch(
           `https://api.foursquare.com/v3/places/search?query=${encodeURIComponent(name)}&ll=1.3521,103.8198&radius=3000&limit=1`,
@@ -46,7 +74,7 @@ useEffect(() => {
           }
         );
 
-        await new Promise((res) => setTimeout(res, 300));
+        await new Promise((res) => setTimeout(res, 300)); // small delay to avoid throttling
         const data = await res.json();
 
         if (data.results && data.results.length > 0) {
@@ -57,7 +85,6 @@ useEffect(() => {
             lng: place.geocodes.main.longitude,
           });
         } else {
-          // 🌍 Fallback to OpenStreetMap if Foursquare failed
           const osmRes = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(name)}`
           );
