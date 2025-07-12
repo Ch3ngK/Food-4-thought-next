@@ -6,23 +6,18 @@ import { supabase } from '@/app/supabaseClient';
 import { FoodLocation } from '../types';
 import LocationComponent from './locationComponent';
 import LocationInput from './locationInput';
-import './food-trail-table.css'; 
+import Header from './header';  // ✅ Correct import
+import './food-trail-table.css';
 
 export default function LocationManager() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [locations, setLocations] = useState<FoodLocation[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const allLocations = searchParams.getAll('location');
-
-  // Toggle visited (placeholder)
-/*  const handleToggleLocation = (_loc: FoodLocation, _index: number) => {
-    alert('Toggling visited status is not implemented yet.');
-  }; */
+  const [stats, setStats] = useState({ total: 0, visited: 0 });
+  const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchLocations = async () => {
+    const fetchAllData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
@@ -39,10 +34,30 @@ export default function LocationManager() {
           router.push('/food-trail');
         }
       }
+
+      const { count } = await supabase
+        .from('food_trail_locations')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      const { count: visitedCount } = await supabase
+        .from('food_trail_locations')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('visited', true);
+
+      setStats({
+        total: count || 0,
+        visited: visitedCount || 0,
+      });
+
+      const fetchedUsername = user.user_metadata?.username || user.email;
+      setUsername(fetchedUsername);
+
       setLoading(false);
     };
 
-    fetchLocations();
+    fetchAllData();
   }, []);
 
   const handleAddLocation = async (title: string) => {
@@ -55,7 +70,10 @@ export default function LocationManager() {
       .select();
 
     if (error) console.error(error);
-    else setLocations(prev => [...prev, data[0]]);
+    else {
+      setLocations(prev => [...prev, data[0]]);
+      setStats(prev => ({ ...prev, total: prev.total + 1 }));
+    }
   };
 
   const handleToggleLocation = async (food_trail_id: number, visited: boolean) => {
@@ -65,34 +83,49 @@ export default function LocationManager() {
       .eq('food_trail_id', food_trail_id);
 
     if (error) console.error(error);
-    else setLocations(prev => 
-      prev.map(loc => loc.food_trail_id === food_trail_id ? { ...loc, visited } : loc)
-    );
+    else {
+      setLocations(prev =>
+        prev.map(loc => loc.food_trail_id === food_trail_id ? { ...loc, visited } : loc)
+      );
+      setStats(prev => ({
+        ...prev,
+        visited: visited ? prev.visited + 1 : prev.visited - 1,
+      }));
+    }
   };
 
-
   const handleDeleteLocation = async (id: number) => {
+    const toDelete = locations.find(loc => loc.food_trail_id === id);
+    const wasVisited = toDelete?.visited || false;
+
     const { error } = await supabase
       .from('food_trail_locations')
       .delete()
       .eq('food_trail_id', id);
 
     if (error) console.error(error);
-    else setLocations(prev => prev.filter(loc => loc.food_trail_id !== id));
+    else {
+      setLocations(prev => prev.filter(loc => loc.food_trail_id !== id));
+      setStats(prev => ({
+        total: prev.total - 1,
+        visited: wasVisited ? prev.visited - 1 : prev.visited,
+      }));
+    }
   };
 
   if (loading) return <div>Loading...</div>;
 
   return (
     <div>
+      <Header stats={stats} username={username} />
       <LocationInput onAdd={handleAddLocation} />
-      <table className= "food-trail-table">
+      <table className="food-trail-table">
         <thead>
           <tr>
-          <th className='a'>#</th>
-            <th className='Location'>Location</th>
-            <th className='Visited'>Visited</th>
-            <th className='Action'>Action</th>
+            <th className="a">#</th>
+            <th className="Location">Location</th>
+            <th className="Visited">Visited</th>
+            <th className="Action">Action</th>
           </tr>
         </thead>
         <tbody>

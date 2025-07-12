@@ -312,6 +312,10 @@ export default function Popular() {
             </div>
           ))}
         </div>
+        <br></br>
+        <Link href="/all-food-trails" className="view-all-trails-button">
+          View All Food Trails
+        </Link>
         <div className="back-to-home-container">
           <Link href="/home" className="back-to-home-button">
             Back to Home

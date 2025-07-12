@@ -221,7 +221,7 @@ function Home() {
           </div>
         </div>
 
-        <button type="submit" className="See-all-button">See more</button>
+        <Link href="/cuisinePage" className="See-all-button">See more</Link>
 
         <div className="Image-container">
           <Image id="Food-trail-background" src={imageUrls.foodtrail} alt="Food trail background" width={1700} height={900} />

@@ -32,10 +32,11 @@ export default function FoodTrailSharing() {
     async function fetchTrail() {
       setLoading(true);
       const { data, error } = await supabase
-        .from<Trail>('food_trails')
+        .from('food_trails')
         .select('*')
         .eq('slug', trailID)
         .single();
+
 
       if (error) {
         setError('Trail not found or error fetching data.');
@@ -100,6 +101,9 @@ export default function FoodTrailSharing() {
           Share This Trail
         </Link>
       </div>
+      <Link href="/popular" className="back-button-fts"> 
+        Back to popular page
+      </Link>
     </div>
   );
 }

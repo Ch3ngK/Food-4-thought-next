@@ -1,12 +1,9 @@
-// src/pages/FoodStart.tsx
-
 'use client';
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from '@/app/supabaseClient';
 import { Input } from '@/components/ui/input';
-import Header from "./components/header";
 import LocationManager from "./components/locationManager";
 import "./FoodTrail.css";
 import "./FoodStart.css";
@@ -17,7 +14,6 @@ export default function FoodTrailPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // check if user has any locations
     const checkLocations = async () => {
       const { count } = await supabase
         .from('food_trail_locations')
@@ -32,11 +28,9 @@ export default function FoodTrailPage() {
     if (!location.trim()) return;
 
     try {
-      // check authentication
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return router.push('/login');
 
-      // insert first location
       const { error } = await supabase
         .from('food_trail_locations')
         .insert([{ 
@@ -47,7 +41,6 @@ export default function FoodTrailPage() {
 
       if (error) throw error;
 
-      // transition to trail view
       setHasStarted(true);
       router.refresh();
 
@@ -57,7 +50,6 @@ export default function FoodTrailPage() {
     }
   };
 
-  // Render start screen
   if (!hasStarted) {
     return (
       <div className="background-img-4">
@@ -90,12 +82,10 @@ export default function FoodTrailPage() {
     );
   }
 
-  // Render main trail view
   return (
     <div className="background-img-5">
       <div className="dark-overlay"></div>
       <div className="text-box-5">
-      <Header />
         <main>
           <LocationManager />
         </main>

@@ -117,3 +117,25 @@ body {
   text-align: left;
   left: 10px;
 }
+
+.back-button-fts {
+  display: inline-block;
+  padding: 12px 25px;
+  background-color: #f39c12;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  position: relative; 
+  left: 850px;
+}
+
+.back-button-fts:hover {
+  background-color: #e74c3c;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}

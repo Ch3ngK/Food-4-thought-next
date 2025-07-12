@@ -3,17 +3,17 @@
 }
 
 .background-img-1 {
-  position: fixed; 
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
-  min-height: 100vh; 
-  height: 100%; 
-  background-image: url( https://images.pexels.com/photos/616401/pexels-photo-616401.jpeg?cs=srgb&dl=pexels-goumbik-616401.jpg&fm=jpg);
+  height: 100vh;
+  background-image: url(https://images.pexels.com/photos/616401/pexels-photo-616401.jpeg?cs=srgb&dl=pexels-goumbik-616401.jpg&fm=jpg);
   background-size: cover;
   background-repeat: no-repeat;
-  background-position: center; 
-  border: 2px solid #ccc; 
-  border-radius: 5px; 
-  filter: brightness(0.6); /* dim the background */
+  background-position: center;
+  z-index: -1;
+  filter: brightness(0.6);
 }
 
 .Grey-box-1 {
@@ -556,12 +556,12 @@
   color: rgb(255, 255, 255);
   border: none;
   border-radius: 5px; 
-  font-size: 20px;
-  font-family: 'Inria Serif', regular;
   font-weight: bold;
+  font-size: 16px;
   cursor: pointer;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   transition: background-color 0.3s ease, transform 0.2s ease;
+  padding: 12px 25px;
 }
 
 .See-all-button:hover {
