@@ -2,20 +2,30 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import './SignUp.css';
 import Image from 'next/image';
 import { supabase } from '../supabaseClient';
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/ui/input";
+import { AlertCircleIcon, CheckCircle2Icon } from 'lucide-react';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
+
+
 
 function SignUp() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState(false);
+  const [successMsg, setSuccessMsg] = useState(false);
+  const router = useRouter();
 
-  // 🟡 New image URLs
+  // new image URLs
   const [logoUrl, setLogoUrl] = useState('');
   const [chefUrl, setChefUrl] = useState('');
 
@@ -33,13 +43,13 @@ function SignUp() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg('');
-    setSuccessMsg('');
+    setErrorMsg(false);
+    setSuccessMsg(false);
 
     if (!username || !email || !password || !confirmPassword) {
-      setErrorMsg('Please fill in all fields.');
+      setErrorMsg(true);
     } else if (password !== confirmPassword) {
-      setErrorMsg('Passwords do not match.');
+      setErrorMsg(true);
     } else {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -50,20 +60,42 @@ function SignUp() {
       });
 
       if (error && !data?.user) {
-        setErrorMsg(error.message);
+        setErrorMsg(true);
       } else {
-        setSuccessMsg('Signup successful! Please check your email to confirm.');
+        setSuccessMsg(true);
         setUsername('');
         setEmail('');
         setPassword('');
         setConfirmPassword('');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        router.push('./login');
       }
     }
   };
 
   return (
+
     <div className="SignUp">
+      
       <div className="background-img-3">
+      <div className="top-0 left-0 right-0 flex justify-center z-50 pt-4">
+        <div className="w-full max-w-md px-4 flex justify-center">
+        {successMsg && (
+          <Alert className="mb-4 bg-green-100 border-green-200 text-green-700 animate-slideDown">
+          <CheckCircle2Icon className="h-4 w-4 text-green-500" />
+          <AlertTitle>Signup Successful !</AlertTitle>
+          <AlertDescription>Redirecting you to the login page to log in...</AlertDescription>
+          </Alert>
+        )}
+
+        {errorMsg && (
+          <Alert variant="destructive" className="mb-0 animate-slideDown">
+            <AlertCircleIcon className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{errorMsg}. Please try signing up again. </AlertDescription>
+          </Alert>
+        )}
+      
         <div className="text-box-3">
           {chefUrl && <Image id="Chef-3" src={chefUrl} alt="Chef Image" width={100} height={100} />}
           <br />
@@ -121,6 +153,9 @@ function SignUp() {
         </div>
       </div>
     </div>
+    </div>
+    </div>
+   
   );
 }
 

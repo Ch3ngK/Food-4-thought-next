@@ -18,12 +18,12 @@ function ResetPassword() {
   const [error, setError] = useState('');
   const [hasMounted, setHasMounted] = useState(false);
 
-  // Prevent hydration mismatch
+  // prevent hydration mismatch
   useEffect(() => {
     setHasMounted(true);
   }, []);
 
-  // Fetch image URLs once mounted
+  // fetch image URLs once mounted
   useEffect(() => {
     const fetchImageUrls = async () => {
       const { data: logo } = supabase.storage.from('pictures').getPublicUrl('Food4Thought.png');
