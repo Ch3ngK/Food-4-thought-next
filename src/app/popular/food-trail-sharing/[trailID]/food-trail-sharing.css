@@ -118,6 +118,11 @@ body {
   left: 10px;
 }
 
+.button-container {
+  text-align: center;
+  margin-top: 20px;
+}
+
 .back-button-fts {
   display: inline-block;
   padding: 12px 25px;
@@ -130,8 +135,6 @@ body {
   border: none;
   cursor: pointer;
   font-size: 16px;
-  position: relative; 
-  left: 850px;
 }
 
 .back-button-fts:hover {

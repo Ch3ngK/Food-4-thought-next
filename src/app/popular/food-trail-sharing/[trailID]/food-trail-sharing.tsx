@@ -101,9 +101,11 @@ export default function FoodTrailSharing() {
           Share This Trail
         </Link>
       </div>
+      <div className="button-container">
       <Link href="/popular" className="back-button-fts"> 
         Back to popular page
       </Link>
+      </div>
     </div>
   );
 }
