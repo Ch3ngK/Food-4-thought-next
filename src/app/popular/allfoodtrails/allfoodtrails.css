@@ -1,0 +1,169 @@
+/* Match Home page style for background dimming */
+.background-img-afts {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background-image: url('https://images.pexels.com/photos/616401/pexels-photo-616401.jpeg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  z-index: -1;
+  filter: brightness(0.6); /* dims the background image */
+}
+
+.trails-page-container,
+.food-trails-loading {
+  position: relative;
+  z-index: 2;
+}
+
+.loading-spinner .spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 4px solid rgba(255,255,255,0.4);
+  border-top: 4px solid #f97316;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+#Logo-afts {
+  position: absolute;
+  left: 30px;
+  width: 13%;
+  top: 10%;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.allfoodtrailsheader {
+  position: relative; 
+  top: 160px;
+  background-color: #f97316; 
+  color: white;             
+  font-size: 1.25rem;        
+  padding: 12px 24px;        
+  border-radius: 6px;        
+  max-width: 300px;         
+  margin: 20px auto;         
+  text-align: center;       
+  font-weight: 600;         
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  font-size: 30px;
+  font-style: italic;
+}
+
+.allfoodtrailsheader-2 {
+  position: relative;
+  top: 180px;
+  left: 32%;
+  font-size: 20px;
+  color: white;
+}
+
+.trails-page-container {
+  position: relative;
+  margin: 5rem auto;
+  margin-top: 210px;
+  max-width: 1200px;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 3rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  color: #333;
+}
+
+.search-bar {
+  position: relative;
+  max-width: 400px;
+  margin: 0 auto 2rem;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 10px 40px;
+  border-radius: 20px;
+  border: none;
+  font-size: 1rem;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: #666;
+}
+
+.trails-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.trail-card {
+  display: block;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+  color: #333;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.trail-card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.trail-info {
+  padding: 15px;
+  text-align: left;
+}
+
+.trail-info h3 {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+}
+
+.trail-desc {
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+  color: #666;
+}
+
+.trail-meta {
+  font-size: 0.85rem;
+  color: #999;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.trail-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+.back-button-aft {
+  display: inline-block;
+  padding: 12px 25px;
+  margin-left: 680px;
+  margin-top: -70px;
+  background-color: #f39c12;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.back-button-aft:hover {
+  background-color: #e74c3c;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}

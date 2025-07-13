@@ -313,7 +313,7 @@ export default function Popular() {
           ))}
         </div>
         <br></br>
-        <Link href="/all-food-trails" className="view-all-trails-button">
+        <Link href="/popular/allfoodtrails" className="view-all-trails-button">
           View All Food Trails
         </Link>
         <div className="back-to-home-container">

@@ -93,7 +93,7 @@ html, body {
 
 .Login-text {
   position: absolute; 
-  top: 230px;
+  top: 30%;
   right: 110px;
   text-align: middle;
   padding-left: 20px; 
@@ -177,7 +177,7 @@ html, body {
 
 .Login-button {
   position: absolute;
-  top: 77%;
+  top: 73%;
   left: 12%;
   width: 220px;
   height: 40px;

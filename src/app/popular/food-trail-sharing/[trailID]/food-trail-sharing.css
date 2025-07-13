@@ -100,11 +100,16 @@ body {
 
 .duration, 
 .stops,
-.rating, 
+.rating-1, 
 .subtitle,
 .destinations {
   position: relative; 
   left: 10px;
+  text-align: left;
+}
+
+.rating-1 {
+  color: #f39c12;
   text-align: left;
 }
 

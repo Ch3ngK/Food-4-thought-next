@@ -108,7 +108,7 @@ function CuisinePage() {
             </Link>
           ))}
         </div>
-        <Link href='./home' className="back-home-button">Back to Home</Link>
+        <Link href='./home' className="back-home-button-1">Back to Home</Link>
       </div>
     </div>
   );

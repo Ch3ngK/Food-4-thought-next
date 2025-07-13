@@ -81,7 +81,7 @@ export default function FoodTrailSharing() {
         <div className="trail-details">
           <div className="duration"><strong>Duration:</strong> {trail.duration}</div>
           <div className="stops"><strong>Stops:</strong> {trail.stops}</div>
-          <div className="rating"><strong>Rating:</strong> {trail.rating}</div>
+          <div className="rating-1"><strong>Rating:</strong> {trail.rating}</div>
           <div className="subtitle">{trail.description2}</div>
           <div className='destinations-header'>Destinations:</div>
           <div className="destinations">{trail.destinations}</div>
