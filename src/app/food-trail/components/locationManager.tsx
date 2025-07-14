@@ -6,7 +6,7 @@ import { supabase } from '@/app/supabaseClient';
 import { FoodLocation } from '../types';
 import LocationComponent from './locationComponent';
 import LocationInput from './locationInput';
-import Header from './header';  // ✅ Correct import
+import Header from './header';  // correct import
 import './food-trail-table.css';
 
 export default function LocationManager() {

@@ -131,27 +131,53 @@ function Home() {
     <ProtectedRoute>
     <div className="Home">
       <div className="background-img-1"></div>
-      <div className="Grey-box-1">
-        <Image id="Logo-1" src={imageUrls.logo} alt="Logo" width={240} height={80} />
-        <Image id="Instagram" src={imageUrls.instagram} alt="Instagram icon" width={70} height={70} />
-        <Image id="Twitter" src={imageUrls.twitter} alt="Twitter icon" width={70} height={70} />
-        <Image id="Facebook" src={imageUrls.facebook} alt="Facebook icon" width={70} height={70} />
-        <Image id="Tiktok" src={imageUrls.tiktok} alt="Tiktok icon" width={70} height={70} />
-        <button className = "logout-button" onClick={handleLogout}>Log out</button>
-        <div className="Welcome-1">Welcome {username ? username : 'Guest'},</div>
+      <div className="header-container">
+        <div className="logo-section">
+          <Image id="Logo-1" src={imageUrls.logo} alt="Logo" width={240} height={80} />
+          <div className="Welcome-1">Welcome {username ? username : 'Guest'},</div>
+        </div>
+        
+        <div className="social-media-section">
+          <div className="social-icons">
+            <Image id="Instagram" src={imageUrls.instagram} alt="Instagram icon" width={50} height={50} />
+            <Image id="Twitter" src={imageUrls.twitter} alt="Twitter icon" width={50} height={50} />
+            <Image id="Facebook" src={imageUrls.facebook} alt="Facebook icon" width={50} height={50} />
+            <Image id="Tiktok" src={imageUrls.tiktok} alt="Tiktok icon" width={50} height={50} />
+          </div>
+          <button className="logout-button" onClick={handleLogout}>
+            <span>🚪</span> Log out
+          </button>
+        </div>
       </div>
 
       <div className="text-box-1">
-        <div className="Grey-box-2">
-          <Link href="/cuisinePage" className="Cuisines-text-1">Cuisines</Link>
-          <Link href="/popular" className="Popular-text-1">Popular</Link>
-          <Link href="/home" className="Home-text-1">Home</Link>
-          <Link href="/about" className="About-text-1">About</Link>
-          <Link href='../food-trail' className="Create-food-trail-text-1">Create food trail today!</Link>
-        </div>
+        <nav className="navigation-bar">
+          <div className="nav-container">
+            {/* <Link href="/home" className="nav-link active">
+              <span className="nav-icon">🏠</span>
+              <span className="nav-text">Home</span>
+            </Link> */}
+            <Link href="/cuisinePage" className="nav-link">
+              <span className="nav-icon">🍽️</span>
+              <span className="nav-text">Cuisines</span>
+            </Link>
+            <Link href="/popular" className="nav-link">
+              <span className="nav-icon">🔥</span>
+              <span className="nav-text">Popular</span>
+            </Link>
+            <Link href="/about" className="nav-link">
+              <span className="nav-icon">ℹ️</span>
+              <span className="nav-text">About</span>
+            </Link>
+            <Link href="../food-trail" className="nav-link special-link">
+              <span className="nav-icon">🗺️</span>
+              <span className="nav-text">Create Food Trail</span>
+            </Link>
+          </div>
+        </nav>
 
-        <div className="Black-box-1">
-          <div className="Trending">Trending today!</div>
+        <div className="section-header">
+          <h2 className="section-title">🌟 Trending Today!</h2>
         </div>
 
         {/* Carousel with autoplay */}
@@ -172,64 +198,110 @@ function Home() {
             <CarouselPrevious />
             <CarouselNext />
           </Carousel>
-          <div className="text-muted-foreground py-2 text-center text-sm">
+          <div className="carousel-indicator">
             Slide {currentSlide} of {totalSlides}
           </div>
         </div>
 
-        <div className="Black-box-2">
-          <div className="Fresh-from-community-text">Fresh from the community</div>
+        <div className="section-header">
+          <h2 className="section-title">📰 Fresh from the Community</h2>
         </div>
 
-        <div className="Newspaper-container">
-          <Image id="Newspaper" src={imageUrls.newspaper} alt="Newspaper" width={1700} height={900} />
+        <div className="community-posts">
+          <div className="newspaper-background">
+            <Image id="Newspaper" src={imageUrls.newspaper} alt="Newspaper" width={1700} height={900} />
+          </div>
 
           {/* Comment Box 1 */}
-          <div className="Comment-1-box">
-            <div className="Comment-1-text">Cheap and affordable western at ang mo kio coffeeshop</div>
-            <Image id="Western-demo" src={imageUrls.western} alt="Western food demo" width={300} height={150} />
-            <Image id="rating-1" src={imageUrls.star} alt="star" width={60} height={50} />
-            <Image id="rating-2" src={imageUrls.star} alt="star" width={60} height={50} />
-            <Image id="rating-3" src={imageUrls.star} alt="star" width={60} height={50} />
-            <Image id="rating-4" src={imageUrls.star} alt="star" width={60} height={50} />
-            <Image id="rating-5" src={imageUrls.halfstar} alt="half star" width={60} height={50} />
-            <div className="Username-1">By: Foodreviewer123</div>
+          <div className="post-card">
+            <div className="post-content">
+              <h3 className="post-title">Cheap and affordable western at ang mo kio coffeeshop</h3>
+              <div className="post-details">
+                <div className="post-info">
+                  <div className="rating-container">
+                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                    <Image src={imageUrls.halfstar} alt="half star" width={25} height={25} />
+                  </div>
+                  <div className="post-author">By: Foodreviewer123</div>
+                </div>
+                <div className="post-image">
+                  <Image src={imageUrls.western} alt="Western food demo" width={200} height={120} />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Comment Box 2 */}
-          <div className="Comment-2-box">
-            <div className="Comment-2-text">Best Yong Tau Fu in Singapore, must try!</div>
-            <Image id="Yong-Tau-Fu-demo" src={imageUrls.yongtaufu} alt="Yong Tau Fu demo" width={300} height={200} />
-            <Image id="rating-6" src={imageUrls.star} alt="star" width={60} height={50} />
-            <Image id="rating-7" src={imageUrls.star} alt="star" width={60} height={50} />
-            <Image id="rating-8" src={imageUrls.star} alt="star" width={60} height={50} />
-            <Image id="rating-9" src={imageUrls.star} alt="star" width={60} height={50} />
-            <Image id="rating-10" src={imageUrls.halfstar} alt="half star" width={60} height={50} />
-            <div className="Username-2">By: ilovefood123</div>
+          <div className="post-card">
+            <div className="post-content">
+              <h3 className="post-title">Best Yong Tau Fu in Singapore, must try!</h3>
+              <div className="post-details">
+                <div className="post-info">
+                  <div className="rating-container">
+                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                    <Image src={imageUrls.halfstar} alt="half star" width={25} height={25} />
+                  </div>
+                  <div className="post-author">By: ilovefood123</div>
+                </div>
+                <div className="post-image">
+                  <Image src={imageUrls.yongtaufu} alt="Yong Tau Fu demo" width={200} height={120} />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Comment Box 3 */}
-          <div className="Comment-3-box">
-            <div className="Comment-3-text">Best nasi lemak in Singapore, must try!</div>
-            <Image id="Nasi-Lemak-demo" src={imageUrls.nasilemak} alt="Nasi Lemak demo" width={300} height={200} />
-            <Image id="rating-11" src={imageUrls.star} alt="star" width={60} height={50} />
-            <Image id="rating-12" src={imageUrls.star} alt="star" width={60} height={50} />
-            <Image id="rating-13" src={imageUrls.star} alt="star" width={60} height={50} />
-            <Image id="rating-14" src={imageUrls.star} alt="star" width={60} height={50} />
-            <Image id="rating-15" src={imageUrls.star} alt="star" width={60} height={50} />
-            <div className="Username-3">By: foodislife123</div>
+          <div className="post-card">
+            <div className="post-content">
+              <h3 className="post-title">Best nasi lemak in Singapore, must try!</h3>
+              <div className="post-details">
+                <div className="post-info">
+                  <div className="rating-container">
+                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                  </div>
+                  <div className="post-author">By: foodislife123</div>
+                </div>
+                <div className="post-image">
+                  <Image src={imageUrls.nasilemak} alt="Nasi Lemak demo" width={200} height={120} />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <Link href="/cuisinePage" className="See-all-button">See more</Link>
-
-        <div className="Image-container">
-          <Image id="Food-trail-background" src={imageUrls.foodtrail} alt="Food trail background" width={1700} height={900} />
-          <Link href="../food-trail" className="Hover-button-link">Create your food trail!</Link>
-          <div className="Dark-overlay"></div>
+        <div className="see-more-container">
+          <Link href="/cuisinePage" className="see-more-button">
+            See More →
+          </Link>
         </div>
 
-        <div className="Quote">~Redefining food discovery~</div>
+        <div className="cta-section">
+          <div className="cta-background">
+            <Image src={imageUrls.foodtrail} alt="Food trail background" width={1700} height={600} />
+            <div className="cta-overlay"></div>
+            <div className="cta-content">
+              <h2 className="cta-title">Ready to explore?</h2>
+              <p className="cta-subtitle">Create your personalized food trail and discover hidden gems</p>
+              <Link href="../food-trail" className="cta-button">
+                Create Your Food Trail
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="footer-quote">
+          <p>~Redefining food discovery~</p>
+        </div>
       </div>
     </div>
     </ProtectedRoute>

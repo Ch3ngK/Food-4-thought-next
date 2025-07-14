@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import './cuisinePage.css';
-import { supabase } from '../supabaseClient'; // Adjust the path if needed
+import { supabase } from '../supabaseClient'; 
 
 function CuisinePage() {
   const route = useRouter();
@@ -76,16 +76,16 @@ function CuisinePage() {
 
   return (
     <div className="CuisinePage">
-      <div className="background-img"></div>
-      <div className="header-box">
+      <div className="background-img-cuisine"></div>
+      {/* <div className="header-box">
         {logoUrl && <Image id="Logo" src={logoUrl} alt="Food 4 Thought Logo" width={240} height={80} />}
         {instagramUrl && <Image id="Instagram" src={instagramUrl} alt="Instagram icon" width={50} height={50} />}
         {twitterUrl && <Image id="Twitter" src={twitterUrl} alt="Twitter icon" width={50} height={50} />}
         {facebookUrl && <Image id="Facebook" src={facebookUrl} alt="Facebook icon" width={50} height={50} />}
         {tiktokUrl && <Image id="Tiktok" src={tiktokUrl} alt="Tiktok icon" width={50} height={50} />}
-      </div>
-      <div className="main-box">
-        <h1 className="page-title">Choose Your Cuisine !</h1>
+      </div> */}
+      <div className="main-box-cuisine">
+        <h1 className="page-title">Choose Your Cuisine!</h1>
         <div className="cuisine-grid">
           {cuisines.map((cuisine, index) => (
             <Link
@@ -108,7 +108,10 @@ function CuisinePage() {
             </Link>
           ))}
         </div>
-        <Link href='./home' className="back-home-button-1">Back to Home</Link>
+        <Link href='./home' className="back-home-button-1">
+          <span className="button-text">Back to Home</span>
+          <span className="button-icon">→</span>
+        </Link>
       </div>
     </div>
   );
