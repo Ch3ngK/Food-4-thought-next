@@ -65,7 +65,7 @@ useEffect(() => {
 
     setTimeout(() => {
       setDelayComplete(true);
-    }, 1500); // 1.5 seconds delay
+    }, 600); // 0.6 seconds delay
   };
 
   loadImages();

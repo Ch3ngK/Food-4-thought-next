@@ -2,9 +2,9 @@
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;     /* Add this */
-  bottom: 0;    /* And this */
-  width: 100%;  /* Avoid 100vw */
+  right: 0;     
+  bottom: 0;   
+  width: 100%;  /* avoid 100vw */
   height: 100%;
   background-color: #000; /* or your theme */
   display: flex;

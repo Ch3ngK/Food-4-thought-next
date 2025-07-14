@@ -71,8 +71,8 @@ useEffect(() => {
       const { data } = supabase.storage.from('pictures').getPublicUrl(file);
       urls[key] = data.publicUrl;
     }
-    // Simulate slow load
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // simulate slow load
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     setImageUrls(urls);
     setIsMounted(true);
