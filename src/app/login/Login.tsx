@@ -71,90 +71,127 @@ function Login() {
   };
 
   return (
-    <div className="App">
-      <div className="fixed top-0 left-0 right-0 flex justify-center z-50 pt-4">
-      <div className="w-full max-w-md px-4">
-      {showSuccessAlert && (
-        <Alert className="mb-4 bg-green-100 border-green-200 text-green-700 animate-slideDown">
-          <CheckCircle2Icon className="h-4 w-4 text-green-500" />
-          <AlertTitle>Successful Login!</AlertTitle>
-          <AlertDescription>Redirecting you to the home page...</AlertDescription>
-        </Alert>
-        )}
+    <div className="login-container">
 
-        {errorMsg && (
-          <Alert variant="destructive" className="mb-0 animate-slideDown">
-            <AlertCircleIcon className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{errorMsg}. Please try logging in again. </AlertDescription>
-          </Alert>
-          )}
-      </div>
-      </div>
-
-      <header className="App-header">
-        <div className="background-img-0"></div>
-        <div className="text-box">
-          {chefUrl && <Image id="Chef" src={chefUrl} alt="Chef Image" width={100} height={100} />}
-          <div className="Welcome">Welcome to</div>
-          <br />
-          {logoUrl && <Image id="Logo" src={logoUrl} alt="Logo" width={250} height={100} />}
-          <div className="Login-text">Login</div>
-          <br /><br />
-
-          
-
-          <form onSubmit={handleLogin}>
-            <div className = "w-full max-w-sm space-y-30">
-              <div className="relative space-y-2">
-                <Label htmlFor="email">Enter your email</Label>
-                <Input
-                  name="email"
-                  type="email"
-                  placeholder="abc@xyz.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className = "pr-15 focus-visible:ring-3 focus-visible:ring-orange-500 focus:border-orange-500"
-                />
-              {userIconUrl && <Image id="UserIcon" src={userIconUrl} alt="User Icon" width={30} height={30} className="absolute right-2 top-1/2 -translate-y-1" />}
-              </div>
-            </div>
-            <div className="relative space-y-2"> 
-              <Label htmlFor="password">Enter your password</Label>
-                <Input
-                  name="password"
-                  type="password"
-                  placeholder="Password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className = "pr-15 focus-visible:ring-3 focus-visible:ring-orange-500 focus:border-orange-500"
-                />
-              {passIconUrl && <Image id="PassIcon" src={passIconUrl} alt="Password Icon" width={30} height={30} className="absolute right-2 -translate-y-10"/>}
-            </div>
-            <button type="submit" className="Login-button">Login</button>
-          </form>
-
-          <br /><br />
-          <div className="Checkbox-container">
-            <input 
-              type="checkbox" 
-              checked = {rememberMe} 
-              onChange={() => setRememberMe(!rememberMe)}
-              className="Checkbox" />
-            <label htmlFor="Remember-me">Remember me</label>
-          </div>
-          <br /><br />
-          <div className="Forgot-password">
-            <Link href="/forget-pw/">Forgot password?</Link>
-          </div>
-          <div className="Sign-up">
-            <Link href="/sign-up">Sign up here</Link>
-          </div>
-          <br /><br />
+  <div className="alert-container-login">
+  <div className="alert-wrapper-login">
+    {showSuccessAlert && (
+      <Alert className="alert-login success">
+        <CheckCircle2Icon className="alert-icon-login" />
+        <div>
+          <AlertTitle className="alert-title-login">Successful Login!</AlertTitle>
+          <AlertDescription className="alert-description-login">
+            Redirecting you to the home page...
+          </AlertDescription>
         </div>
-      </header>
+      </Alert>
+    )}
+    {errorMsg && (
+      <Alert variant="destructive" className="alert-login error">
+        <AlertCircleIcon className="alert-icon-login" />
+        <div>
+          <AlertTitle className="alert-title-login">Error</AlertTitle>
+          <AlertDescription className="alert-description-login">
+            {errorMsg}. Please try logging in again.
+          </AlertDescription>
+        </div>
+      </Alert>
+    )}
+  </div>
+</div>
+
+      <div className="background-img"></div>
+      
+      <main className="login-content">
+        <div className="logo-section-login">
+          {chefUrl && <Image 
+            src={chefUrl} 
+            alt="Chef Image" 
+            width={80} 
+            height={80} 
+            className="chef-image-login"
+            priority
+          />}
+          <div className="welcome-text-login">Welcome to</div>
+          {logoUrl && <Image 
+            src={logoUrl} 
+            alt="Logo" 
+            width={200} 
+            height={80} 
+            className="logo-image"
+            priority
+          />}
+        </div>
+
+        <h1 className="login-title">Login</h1>
+
+        <form onSubmit={handleLogin} className="login-form">
+          <div className="input-group">
+            <Label htmlFor="email">Email</Label>
+            <div className="input-wrapper">
+              <Input
+                name="email"
+                type="email"
+                placeholder="abc@xyz.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="login-input"
+              />
+              {userIconUrl && <Image 
+                src={userIconUrl} 
+                alt="User Icon" 
+                width={20} 
+                height={20} 
+                className="input-icon"
+              />}
+            </div>
+          </div>
+
+          <div className="input-group">
+            <Label htmlFor="password">Password</Label>
+            <div className="input-wrapper">
+              <Input
+                name="password"
+                type="password"
+                placeholder="Password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="login-input"
+              />
+              {passIconUrl && <Image 
+                src={passIconUrl} 
+                alt="Password Icon" 
+                width={20} 
+                height={20} 
+                className="input-icon"
+              />}
+            </div>
+          </div>
+
+          <div className="remember-forgot">
+            <label className="remember-me">
+              <input 
+                type="checkbox" 
+                checked={rememberMe} 
+                onChange={() => setRememberMe(!rememberMe)}
+                className="checkbox-login"
+              />
+              Remember me
+            </label>
+            <Link href="/forget-pw/" className="forgot-password">
+              Forgot password?
+            </Link>
+          </div>
+
+          <button type="submit" className="login-button">Login</button>
+        </form>
+
+        <div className="sign-up-link">
+          Don't have an account? <Link href="/sign-up">Sign up here</Link>
+        </div>
+      </main>
     </div>
   );
 }
