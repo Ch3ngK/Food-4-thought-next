@@ -5,6 +5,7 @@ import './about.css';
 import Link from 'next/link';
 import Image from 'next/image';
 import { supabase } from '../supabaseClient';
+import LoadingScreen from '../../components/LoadingScreen';
 
 const imageKeys = {
   logo: 'Food4Thought.png',
@@ -13,6 +14,8 @@ const imageKeys = {
 function AboutPage() {
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [isMounted, setIsMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     const fetchImageUrls = async () => {
@@ -23,14 +26,13 @@ function AboutPage() {
       }
       setImageUrls(urls);
       setIsMounted(true);
+      setLoading(false); 
     };
     fetchImageUrls();
   }, []);
 
-  if (!isMounted || Object.keys(imageUrls).length === 0) {
-    return <div className="loading">Loading...</div>;
-  }
-
+  if (loading) return <LoadingScreen />;
+  
   return (
     <div className='AboutPage-container'>
       <div className='background-img-about'></div>

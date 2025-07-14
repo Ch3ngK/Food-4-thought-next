@@ -1,13 +1,14 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/app/supabaseClient';
 import { FoodLocation } from '../types';
 import LocationComponent from './locationComponent';
 import LocationInput from './locationInput';
-import Header from './header';  // correct import
+import Header from './header';
 import './food-trail-table.css';
+import LoadingScreen from '../../../components/LoadingScreen';
 
 export default function LocationManager() {
   const router = useRouter();
@@ -15,6 +16,8 @@ export default function LocationManager() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, visited: 0 });
   const [username, setUsername] = useState<string | null>(null);
+  const [allVisited, setAllVisited] = useState(false);
+  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -58,7 +61,55 @@ export default function LocationManager() {
     };
 
     fetchAllData();
-  }, []);
+  }, [router]);
+
+  useEffect(() => {
+    if (!loading) {
+      const totalLocations = locations.length;
+      const visitedLocations = locations.filter(loc => loc.visited).length;
+
+      if (totalLocations > 0 && totalLocations === visitedLocations) {
+        setAllVisited(true);
+        redirectTimeoutRef.current = setTimeout(() => {
+          // Full page reload to /food-trail so FoodStart.tsx loads
+          window.location.href = '/food-trail';
+        }, 2500);
+      } else {
+        setAllVisited(false);
+        if (redirectTimeoutRef.current) {
+          clearTimeout(redirectTimeoutRef.current);
+          redirectTimeoutRef.current = null;
+        }
+      }
+
+      if (totalLocations === 0) {
+        // No locations left - also redirect after showing message
+        setAllVisited(true);
+        redirectTimeoutRef.current = setTimeout(() => {
+          window.location.href = '/food-trail';
+        }, 2500);
+      }
+    }
+
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+        redirectTimeoutRef.current = null;
+      }
+    };
+  }, [locations, loading]);
+
+  useEffect(() => {
+    if (loading) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [loading]);
 
   const handleAddLocation = async (title: string) => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -113,7 +164,20 @@ export default function LocationManager() {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <LoadingScreen />;
+
+  if (allVisited) {
+    return (
+      <div className="all-visited-message" style={{ 
+        textAlign: 'center', 
+        marginTop: '3rem', 
+        fontSize: '1.5rem', 
+        color: '#4caf50' 
+      }}>
+        🎉 All locations visited! Redirecting to start page...
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -131,7 +195,7 @@ export default function LocationManager() {
         <tbody>
           {locations.map((location, index) => (
             <LocationComponent
-              key={index}
+              key={location.food_trail_id}
               index={index}
               location={location}
               onToggle={handleToggleLocation}

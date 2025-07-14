@@ -7,21 +7,27 @@ import { Input } from '@/components/ui/input';
 import LocationManager from "./components/locationManager";
 import "./FoodTrail.css";
 import "./FoodStart.css";
+import LoadingScreen from '../../components/LoadingScreen';
 
 export default function FoodTrailPage() {
   const [location, setLocation] = useState("");
   const [hasStarted, setHasStarted] = useState(false);
+  const [loading, setLoading] = useState(true);
+
   const router = useRouter();
 
   useEffect(() => {
     const checkLocations = async () => {
+      setLoading(true);
       const { count } = await supabase
         .from('food_trail_locations')
         .select('*', { count: 'exact', head: true });
       setHasStarted((count || 0) > 0);
+      setLoading(false);
     };
     checkLocations();
   }, []);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +55,8 @@ export default function FoodTrailPage() {
       alert("Failed to add location");
     }
   };
+
+  if (loading) return <LoadingScreen />;
 
   if (!hasStarted) {
     return (

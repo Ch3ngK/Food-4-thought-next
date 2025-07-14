@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { supabase } from '../supabaseClient';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '../auth/ProtectedRoute';
+import LoadingScreen from '../../components/LoadingScreen';
 
 import {
   Carousel,
@@ -63,19 +64,23 @@ function Home() {
     fetchUser();
   }, []);
 
-  useEffect(() => {
-    const fetchImageUrls = async () => {
-      const urls: Record<string, string> = {};
-      for (const [key, file] of Object.entries(imageKeys)) {
-        const { data } = supabase.storage.from('pictures').getPublicUrl(file);
-        urls[key] = data.publicUrl;
-      }
-      setImageUrls(urls);
-    };
+useEffect(() => {
+  const fetchImageUrls = async () => {
+    const urls: Record<string, string> = {};
+    for (const [key, file] of Object.entries(imageKeys)) {
+      const { data } = supabase.storage.from('pictures').getPublicUrl(file);
+      urls[key] = data.publicUrl;
+    }
+    // Simulate slow load
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-    fetchImageUrls();
+    setImageUrls(urls);
     setIsMounted(true);
-  }, []);
+  };
+
+  fetchImageUrls();
+}, []);
+
 
   useEffect(() => {
     if (!carouselApi) return;
@@ -100,7 +105,9 @@ function Home() {
     };
   }, [carouselApi]);
 
-  if (!isMounted || Object.keys(imageUrls).length === 0) return null;
+    if (!isMounted || Object.keys(imageUrls).length === 0) {
+    return <LoadingScreen />;
+  }
 
   const carouselImages = [
     {

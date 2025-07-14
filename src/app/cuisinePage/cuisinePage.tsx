@@ -6,6 +6,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import './cuisinePage.css';
 import { supabase } from '../supabaseClient'; 
+import LoadingScreen from '../../components/LoadingScreen';
+
 
 function CuisinePage() {
   const route = useRouter();
@@ -15,53 +17,61 @@ function CuisinePage() {
   const [twitterUrl, setTwitterUrl] = useState('');
   const [facebookUrl, setFacebookUrl] = useState('');
   const [tiktokUrl, setTiktokUrl] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [delayComplete, setDelayComplete] = useState(false);
+
 
   const [cuisineUrls, setCuisineUrls] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    const loadImages = async () => {
-      const fetchUrl = async (fileName: string) => {
-        const { data } = supabase.storage.from('pictures').getPublicUrl(fileName);
-        return data.publicUrl;
-      };
-
-      const urls = await Promise.all([
-        fetchUrl('Food4Thought.png'),
-        fetchUrl('instagram-icon.png'),
-        fetchUrl('twitter-icon.png'),
-        fetchUrl('facebook-icon.png'),
-        fetchUrl('tiktok-icon.png'),
-
-        fetchUrl('western-demo.png'),
-        fetchUrl('chinese.png'),
-        fetchUrl('indian.png'),
-        fetchUrl('japanese.png'),
-        fetchUrl('korean.png'),
-        fetchUrl('thai.png'),
-        fetchUrl('viet.png'),
-        fetchUrl('malay.png')
-      ]);
-
-      setLogoUrl(urls[0]);
-      setInstagramUrl(urls[1]);
-      setTwitterUrl(urls[2]);
-      setFacebookUrl(urls[3]);
-      setTiktokUrl(urls[4]);
-
-      setCuisineUrls({
-        Western: urls[5],
-        Chinese: urls[6],
-        Indian: urls[7],
-        Japanese: urls[8],
-        Korean: urls[9],
-        Thai: urls[10],
-        Vietnamese: urls[11],
-        Malaysian: urls[12]
-      });
+useEffect(() => {
+  const loadImages = async () => {
+    const fetchUrl = async (fileName: string) => {
+      const { data } = supabase.storage.from('pictures').getPublicUrl(fileName);
+      return data.publicUrl;
     };
 
-    loadImages();
-  }, []);
+    const urls = await Promise.all([
+      fetchUrl('Food4Thought.png'),
+      fetchUrl('instagram-icon.png'),
+      fetchUrl('twitter-icon.png'),
+      fetchUrl('facebook-icon.png'),
+      fetchUrl('tiktok-icon.png'),
+      fetchUrl('western-demo.png'),
+      fetchUrl('chinese.png'),
+      fetchUrl('indian.png'),
+      fetchUrl('japanese.png'),
+      fetchUrl('korean.png'),
+      fetchUrl('thai.png'),
+      fetchUrl('viet.png'),
+      fetchUrl('malay.png')
+    ]);
+
+    setLogoUrl(urls[0]);
+    setInstagramUrl(urls[1]);
+    setTwitterUrl(urls[2]);
+    setFacebookUrl(urls[3]);
+    setTiktokUrl(urls[4]);
+
+    setCuisineUrls({
+      Western: urls[5],
+      Chinese: urls[6],
+      Indian: urls[7],
+      Japanese: urls[8],
+      Korean: urls[9],
+      Thai: urls[10],
+      Vietnamese: urls[11],
+      Malaysian: urls[12]
+    });
+
+    setTimeout(() => {
+      setDelayComplete(true);
+    }, 1500); // 1.5 seconds delay
+  };
+
+  loadImages();
+}, []);
+
+
 
   const cuisines = [
     'Western',
@@ -73,6 +83,8 @@ function CuisinePage() {
     'Vietnamese',
     'Malaysian'
   ];
+
+  if (!delayComplete) return <LoadingScreen />;
 
   return (
     <div className="CuisinePage">

@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/app/supabaseClient';
+import LoadingScreen from '../../components/LoadingScreen';
 
 const LogoUrl = 'https://uziezeevvajhdsxkumse.supabase.co/storage/v1/object/public/pictures/Food4Thought.png'; 
 
@@ -193,23 +194,9 @@ export default function Popular() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="App">
-        <div className="background-img-popular"></div>
-        <Image 
-          id="Logo-popular" 
-          src={LogoUrl} 
-          alt="Food4Thought Logo" 
-          width={200} 
-          height={80} 
-        />
-        <div className="text-box-popular">
-          <div className="popular-food-items">Loading Popular Places...</div>
-        </div>
-      </div>
-    );
-  }
+
+  if (loading) return <LoadingScreen />;
+
 
   return (
     <div className="App">
