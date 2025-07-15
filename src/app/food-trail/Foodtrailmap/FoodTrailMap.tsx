@@ -114,19 +114,21 @@ useEffect(() => {
 const getPlaceCoords = async (query: string): Promise<Location | null> => {
   const win = window as WindowWithGoogle;
 
-  if (!win.google?.maps?.places?.PlacesService) {
+  // Guard clause: if google maps places is undefined, return null early
+  if (
+    !win.google || 
+    !win.google.maps || 
+    !win.google.maps.places || 
+    !win.google.maps.places.PlacesService
+  ) {
     console.warn('Google Maps Places API not loaded');
     return null;
   }
 
   return new Promise((resolve) => {
     try {
-      const service = new win.google.maps.places.PlacesService(
-        document.createElement('div')
-      );
-
-      // your logic continues here...
-
+      // Now TypeScript knows PlacesService exists:
+      const service = new win.google.maps.places.PlacesService(document.createElement('div'));
 
       // First try textSearch which is more flexible
       service.textSearch(
