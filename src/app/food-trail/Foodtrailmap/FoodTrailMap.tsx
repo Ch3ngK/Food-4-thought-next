@@ -127,18 +127,18 @@ const getPlaceCoords = async (query: string): Promise<Location | null> => {
 
   return new Promise((resolve) => {
     try {
-      // Now TypeScript knows PlacesService exists:
-      const service = new win.google.maps.places.PlacesService(document.createElement('div'));
+      // Use non-null assertions (!) here to assure TS this is defined
+      const service = new win.google!.maps!.places!.PlacesService(document.createElement('div'));
 
       // First try textSearch which is more flexible
       service.textSearch(
         {
           query: `${query}, Singapore`,
-          location: new win.google.maps.LatLng(1.3521, 103.8198),
+          location: new win.google!.maps!.LatLng(1.3521, 103.8198),
           radius: 5000
         },
         (results, status) => {
-          if (status === win.google.maps.places.PlacesServiceStatus.OK && results?.[0]?.geometry?.location) {
+          if (status === win.google!.maps!.places!.PlacesServiceStatus.OK && results?.[0]?.geometry?.location) {
             console.log(`Found "${query}" via textSearch`);
             resolve({
               name: results[0].name || query,
@@ -152,13 +152,13 @@ const getPlaceCoords = async (query: string): Promise<Location | null> => {
               {
                 query: `${query}, Singapore`,
                 fields: ['name', 'geometry'],
-                locationBias: new win.google.maps.LatLngBounds(
-                  new win.google.maps.LatLng(1.2, 103.6),
-                  new win.google.maps.LatLng(1.5, 104.0)
+                locationBias: new win.google!.maps!.LatLngBounds(
+                  new win.google!.maps!.LatLng(1.2, 103.6),
+                  new win.google!.maps!.LatLng(1.5, 104.0)
                 )
               },
               (findResults, findStatus) => {
-                if (findStatus === win.google.maps.places.PlacesServiceStatus.OK && 
+                if (findStatus === win.google!.maps!.places!.PlacesServiceStatus.OK && 
                     findResults?.[0]?.geometry?.location) {
                   console.log(`Found "${query}" via findPlaceFromQuery`);
                   resolve({
@@ -169,10 +169,10 @@ const getPlaceCoords = async (query: string): Promise<Location | null> => {
                 } else {
                   // Final fallback to geocoding
                   console.log(`Trying geocoding for "${query}"`);
-                  new win.google.maps.Geocoder().geocode(
+                  new win.google!.maps!.Geocoder().geocode(
                     { address: `${query}, Singapore` },
                     (geoResults, geoStatus) => {
-                      if (geoStatus === win.google.maps.GeocoderStatus.OK && 
+                      if (geoStatus === win.google!.maps!.GeocoderStatus.OK && 
                           geoResults?.[0]?.geometry?.location) {
                         console.log(`Found "${query}" via geocoding`);
                         resolve({
