@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { supabase } from '@/app/supabaseClient';
 import './reviews.css';
 
@@ -34,6 +34,9 @@ function Reviews() {
   const [editedComment, setEditedComment] = useState('');
   const [editedRating, setEditedRating] = useState<number>(0);
   const [editedHoverRating, setEditedHoverRating] = useState<number | null>(null);
+
+  const searchParams = useSearchParams();
+  const placeName = searchParams.get('name');
 
   const fetchReviews = async () => {
     if (!foodPlaceId) return;
@@ -448,7 +451,12 @@ function Reviews() {
               <Image id="dp-google-map" src={imageUrls.dpMap} alt="Map" width={300} height={200} />
               
             </div>
-            <Link href="../mapsPage" className="dp-google-maps-text">View on Google Maps</Link>
+            <Link 
+              href={`/food-trail/Foodtrailmap?locations=${encodeURIComponent(foodPlaceName)}`}
+              className="dp-google-maps-text"
+            >
+              View on Map
+            </Link>
          <div className="comments-outer-container">
           <div className="comment-section">
             {reviews.length === 0 ? (
