@@ -113,8 +113,8 @@ useEffect(() => {
 // Update your getPlaceCoords function to this more robust version:
 const getPlaceCoords = async (query: string): Promise<Location | null> => {
   const win = window as WindowWithGoogle;
-  
-  if (!win.google?.maps?.places) {
+
+  if (!win.google?.maps?.places?.PlacesService) {
     console.warn('Google Maps Places API not loaded');
     return null;
   }
@@ -124,6 +124,9 @@ const getPlaceCoords = async (query: string): Promise<Location | null> => {
       const service = new win.google.maps.places.PlacesService(
         document.createElement('div')
       );
+
+      // your logic continues here...
+
 
       // First try textSearch which is more flexible
       service.textSearch(
