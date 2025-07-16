@@ -38,6 +38,22 @@ const imageKeys = {
   nasibriyani: 'nasi-briyani.png',
 };
 
+
+interface TrendingFood {
+  trending_food_id: string;
+  image_key: string;
+  description: string;
+  cuisine_id: string;
+  cuisine_name: string;
+}
+
+interface CarouselItems {
+  src: string;
+  description: string;
+  cuisineId: string;
+  cuisineName: string;
+}
+
 function Home() {
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [isMounted, setIsMounted] = useState(false);
@@ -45,6 +61,8 @@ function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [totalSlides, setTotalSlides] = useState(0);
   const [username, setUsername] = useState<string | null>(null);
+  const [carouselImages, setCarouselImages] = useState<CarouselItems[]>([]);
+  const [isLoadingCarousel, setIsLoadingCarousel] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -64,6 +82,11 @@ function Home() {
     fetchUser();
   }, []);
 
+const getImageUrl = (imageKey: string) => {
+  const { data } = supabase.storage.from('pictures').getPublicUrl(imageKey);
+  return data.publicUrl;
+};
+
 useEffect(() => {
   const fetchImageUrls = async () => {
     const urls: Record<string, string> = {};
@@ -81,6 +104,119 @@ useEffect(() => {
   fetchImageUrls();
 }, []);
 
+// function to get a "random" selection based on the current date
+const getDailyRandomSelection = (items: TrendingFood[], count: number = 3): TrendingFood[] => {
+  if (items.length <= count) return items;
+  
+  // use current date as seed for consistent daily selection
+  const today = new Date().toDateString();
+  const seed = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  
+  // random number generator
+  const seededRandom = (seed: number) => {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+  };
+  
+  // create a shuffled copy using seeded random
+  const shuffled = [...items];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(seededRandom(seed + i) * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  
+  return shuffled.slice(0, count);
+};
+
+  useEffect(() => {
+    const fetchTrendingFoods = async () => {
+      try {
+        setIsLoadingCarousel(true);
+        
+        const { data: trendingFoods, error } = await supabase
+          .from('trending_foods')
+          .select(`
+            trending_food_id,
+            image_key,
+            description,
+            cuisine_id,
+            cuisine_name
+          `);
+          
+
+        if (error) {
+          console.error('Error fetching trending foods:', error);
+          // fallback to hardcoded values if database query fails
+          setCarouselImages([
+            {
+              src: imageUrls.chickenrice,
+              description: 'Hainanese Chicken Rice - A Singaporean classic!',
+              cuisineId: '1',
+              cuisineName: 'Chinese',
+            },
+            {
+              src: imageUrls.malayrice,
+              description: 'Nasi Lemak - Fragrant rice with spicy sambal and more.',
+              cuisineId: '6',
+              cuisineName: 'Malaysian',
+            },
+            {
+              src: imageUrls.nasibriyani,
+              description: 'Nasi Briyani - Aromatic spiced rice with tender meat.',
+              cuisineId: '6',
+              cuisineName: 'Malaysian',
+            },
+          ]);
+          return;
+        }
+
+        if (trendingFoods && trendingFoods.length > 0) {
+          // get the daily random selection
+          const dailySelection = getDailyRandomSelection(trendingFoods);
+          
+          // transform the data for carousel
+          const transformedImages: CarouselItems[] = dailySelection.map(item => ({
+            src: getImageUrl(item.image_key),
+            description: item.description,
+            cuisineId: item.cuisine_id,
+            cuisineName: item.cuisine_name,
+          }));
+          
+          setCarouselImages(transformedImages);
+        } else {
+          // no data found, use fallback
+          setCarouselImages([
+            {
+              src: imageUrls.chickenrice,
+              description: 'Hainanese Chicken Rice - A Singaporean classic!',
+              cuisineId: '1',
+              cuisineName: 'Chinese',
+            },
+            {
+              src: imageUrls.malayrice,
+              description: 'Nasi Lemak - Fragrant rice with spicy sambal and more.',
+              cuisineId: '6',
+              cuisineName: 'Malaysian',
+            },
+            {
+              src: imageUrls.nasibriyani,
+              description: 'Nasi Briyani - Aromatic spiced rice with tender meat.',
+              cuisineId: '6',
+              cuisineName: 'Malaysian',
+            },
+          ]);
+        }
+      } catch (error) {
+        console.error('Error in fetchTrendingFoods:', error);
+      } finally {
+        setIsLoadingCarousel(false);
+      }
+    };
+    // only fetch when imageUrls are loaded
+    if (Object.keys(imageUrls).length > 0) {
+      fetchTrendingFoods();
+    }
+  }, [imageUrls]);
 
   useEffect(() => {
     if (!carouselApi) return;
@@ -97,7 +233,7 @@ useEffect(() => {
       const nextIndex =
         (carouselApi.selectedScrollSnap() + 1) % carouselApi.scrollSnapList().length;
       carouselApi.scrollTo(nextIndex);
-    }, 3000); // 3 seconds interval
+    }, 7000); // 7 seconds interval
 
     return () => {
       carouselApi.off('select', onSelect);
@@ -109,7 +245,7 @@ useEffect(() => {
     return <LoadingScreen />;
   }
 
-  const carouselImages = [
+  {/* const carouselImage = [
     {
       src: imageUrls.chickenrice,
       description: 'Hainanese Chicken Rice - A Singaporean classic!',
@@ -122,16 +258,21 @@ useEffect(() => {
       src: imageUrls.nasibriyani,
       description: 'Nasi Briyani - Aromatic spiced rice with tender meat.',
     },
-  ];
+  ]; */}
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Logout error:', error.message);
     } else {
-      // Optionally redirect to login/home page after logout
+      // optionally redirect to login/home page after logout
       router.push('/login');
     }
+  };
+
+  const handleCarouselItemClick = (cuisineName: string) => {
+    // navigate to cuisine page with the cuisine ID
+    router.push(`/cuisinePage/indiv-cuisines/${encodeURIComponent(cuisineName)}`);
   };
 
   return (
@@ -187,24 +328,55 @@ useEffect(() => {
           <h2 className="section-title">🌟 Trending Today!</h2>
         </div>
 
-        {/* Carousel with autoplay */}
+        {/* carousel with autoplay */}
         <div className="carousel">
-          <Carousel setApi={setCarouselApi} className="w-full">
-            <CarouselContent>
-              {carouselImages.map((item, index) => (
-                <CarouselItem key={index}>
-                  <Card>
-                    <CardContent className="flex flex-col items-center justify-center p-4">
-                      <Image src={item.src} alt={`carousel-${index}`}  className="carousel-img" width={800} height={300} style={{ borderRadius: '10px' }} />
-                      <p className="carousel-description mt-2 text-center">{item.description}</p>
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
+          {isLoadingCarousel ? (
+            <div className="carousel-loading">
+              <p>Loading trending foods...</p>
+            </div>
+          ) : (
+            <Carousel setApi={setCarouselApi} className="w-full">
+              <CarouselContent>
+                {carouselImages.map((item, index) => (
+                  <CarouselItem key={index}>
+                    <Card>
+                      <CardContent className="flex flex-col items-center justify-center p-4">
+                        <div 
+                          className="carousel-item-clickable"
+                          onClick={() => handleCarouselItemClick(item.cuisineName||'Unknown')}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <Image 
+                            src={item.src} 
+                            alt={`trending-food-${index}`}  
+                            className="carousel-img" 
+                            width={2000} 
+                            height={200} 
+                            style={{ borderRadius: '20px' }} 
+                          />
+                          <p className="carousel-description mt-2 text-center">
+                            {item.description}
+                            {item.cuisineName && (
+                              <span className="cuisine-badge" style={{ 
+                                display: 'block', 
+                                fontSize: '0.9em', 
+                                color: '#666', 
+                                marginTop: '4px' 
+                              }}>
+                              </span>
+                              
+                            )}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          )}
           <div className="carousel-indicator">
             Slide {currentSlide} of {totalSlides}
           </div>
