@@ -7,6 +7,7 @@ import Image from 'next/image';
 import './cuisinePage.css';
 import { supabase } from '../supabaseClient'; 
 import LoadingScreen from '../../components/LoadingScreen';
+import ProtectedRoute from '../auth/ProtectedRoute';
 
 
 function CuisinePage() {
@@ -87,6 +88,7 @@ useEffect(() => {
   if (!delayComplete) return <LoadingScreen />;
 
   return (
+    <ProtectedRoute>
     <div className="CuisinePage">
       <div className="background-img-cuisine"></div>
       {/* <div className="header-box">
@@ -121,11 +123,12 @@ useEffect(() => {
           ))}
         </div>
         <Link href='./home' className="back-home-button-1">
-          <span className="button-text">Back to Home</span>
-          <span className="button-icon">→</span>
+          <span className="button-icon">←</span>
+          <span className="button-text"> Back to Home</span>
         </Link>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }
 

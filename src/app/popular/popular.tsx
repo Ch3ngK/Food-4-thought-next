@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/app/supabaseClient';
 import LoadingScreen from '../../components/LoadingScreen';
+import ProtectedRoute from '../auth/ProtectedRoute';
 
 const LogoUrl = 'https://uziezeevvajhdsxkumse.supabase.co/storage/v1/object/public/pictures/Food4Thought.png'; 
 
@@ -199,6 +200,7 @@ export default function Popular() {
 
 
   return (
+    <ProtectedRoute>
     <div className="App">
       <div className="background-img-popular"></div>
       <Image 
@@ -310,5 +312,6 @@ export default function Popular() {
         </div> 
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

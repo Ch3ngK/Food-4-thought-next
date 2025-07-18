@@ -68,13 +68,15 @@ export default function LocationManager() {
       const totalLocations = locations.length;
       const visitedLocations = locations.filter(loc => loc.visited).length;
 
-      if (totalLocations > 0 && totalLocations === visitedLocations) {
+      if (totalLocations === 0) {
+        // no locations left - also redirect after showing message
         setAllVisited(true);
         redirectTimeoutRef.current = setTimeout(() => {
-          // Full page reload to /food-trail so FoodStart.tsx loads
           window.location.href = '/food-trail';
-        }, 2500);
-      } else {
+        }, 1500);
+      }
+
+      if (totalLocations > 0 && totalLocations === visitedLocations) {
         setAllVisited(false);
         if (redirectTimeoutRef.current) {
           clearTimeout(redirectTimeoutRef.current);
@@ -82,13 +84,7 @@ export default function LocationManager() {
         }
       }
 
-      if (totalLocations === 0) {
-        // No locations left - also redirect after showing message
-        setAllVisited(true);
-        redirectTimeoutRef.current = setTimeout(() => {
-          window.location.href = '/food-trail';
-        }, 2500);
-      }
+      
     }
 
     return () => {
@@ -166,7 +162,7 @@ export default function LocationManager() {
 
   if (loading) return <LoadingScreen />;
 
-  if (allVisited) {
+  if (allVisited ) {
     return (
       <div className="all-visited-message" style={{ 
         textAlign: 'center', 

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { supabase } from '../supabaseClient';
 import LoadingScreen from '../../components/LoadingScreen';
+import ProtectedRoute from '../auth/ProtectedRoute';
 
 const imageKeys = {
   logo: 'Food4Thought.png',
@@ -34,6 +35,7 @@ function AboutPage() {
   if (loading) return <LoadingScreen />;
   
   return (
+    <ProtectedRoute>
     <div className='AboutPage-container'>
       <div className='background-img-about'></div>
       <Image id="Logo-about" src={imageUrls.logo} alt="Logo" width={240} height={80} />
@@ -60,6 +62,7 @@ function AboutPage() {
         </Link>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }
 
