@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import Router, { useRouter } from 'next/router';
 import { supabase } from '../supabaseClient';
 import './ForgotPassword.css';
 import { Input } from "@/components/ui/input"
@@ -25,6 +26,8 @@ function ForgotPassword() {
     fetchImageUrls();
   }, []);
 
+  const router = useRouter();
+
 
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -43,6 +46,7 @@ function ForgotPassword() {
   } else {
     alert(`A password reset link has been sent to ${email}`);
     setEmail('');
+    setTimeout(() => router.push('/login'), 4000);
   }
 };
 

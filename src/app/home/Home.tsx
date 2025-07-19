@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useMemo, useState, useRef } from 'react';
 import './Home.css';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -38,7 +38,6 @@ const imageKeys = {
   nasibriyani: 'nasi-briyani.png',
 };
 
-
 interface TrendingFood {
   trending_food_id: string;
   image_key: string;
@@ -54,19 +53,55 @@ interface CarouselItems {
   cuisineName: string;
 }
 
-function Home() {
-  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
-  const [isMounted, setIsMounted] = useState(false);
-  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+// custom hook for managing carousel
+const useCarousel = (carouselApi: CarouselApi | undefined) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [totalSlides, setTotalSlides] = useState(0);
-  const [username, setUsername] = useState<string | null>(null);
-  const [carouselImages, setCarouselImages] = useState<CarouselItems[]>([]);
-  const [isLoadingCarousel, setIsLoadingCarousel] = useState(true);
-  const router = useRouter();
+  const autoplayIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    const fetchUser = async () => {
+  const initializeCarousel = useCallback(() => {
+    if (!carouselApi) return;
+
+    setTotalSlides(carouselApi.scrollSnapList().length);
+    setCurrentSlide(carouselApi.selectedScrollSnap() + 1);
+
+    const onSelect = () => {
+      setCurrentSlide(carouselApi.selectedScrollSnap() + 1);
+    };
+
+    carouselApi.on('select', onSelect);
+
+    // clear the existing interval
+    if (autoplayIntervalRef.current) {
+      clearInterval(autoplayIntervalRef.current);
+    }
+
+    // set up autoplay
+    autoplayIntervalRef.current = setInterval(() => {
+      const nextIndex = (carouselApi.selectedScrollSnap() + 1) % carouselApi.scrollSnapList().length;
+      carouselApi.scrollTo(nextIndex);
+    }, 7000);
+
+    return () => {
+      carouselApi.off('select', onSelect);
+      if (autoplayIntervalRef.current) {
+        clearInterval(autoplayIntervalRef.current);
+      }
+    };
+  }, [carouselApi]);
+
+  return { currentSlide, totalSlides, initializeCarousel };
+};
+
+// custom hook for user data
+const useUser = () => {
+  const [username, setUsername] = useState<string | null>(null);
+  const [isUserLoaded, setIsUserLoaded] = useState(false);
+
+  const fetchUser = useCallback(async () => {
+    if (isUserLoaded) return; // prevents refetching of datas
+
+    try {
       const { data: { user }, error } = await supabase.auth.getUser();
       if (error) {
         console.error('Error fetching user:', error);
@@ -77,412 +112,391 @@ function Home() {
         const fetchedUsername = user.user_metadata?.username || user.email;
         setUsername(fetchedUsername);
       }
-    };
+    } finally {
+      setIsUserLoaded(true);
+    }
+  }, [isUserLoaded]);
 
-    fetchUser();
+  return { username, fetchUser, isUserLoaded };
+};
+
+// custom hook for image URLs with caching
+const useImageUrls = () => {
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  const [isLoaded, setIsLoaded] = useState(false);
+  const cacheRef = useRef<Record<string, string>>({});
+
+  const getImageUrl = useCallback((imageKey: string) => {
+    if (cacheRef.current[imageKey]) {
+      return cacheRef.current[imageKey];
+    }
+    const { data } = supabase.storage.from('pictures').getPublicUrl(imageKey);
+    cacheRef.current[imageKey] = data.publicUrl;
+    return data.publicUrl;
   }, []);
 
-const getImageUrl = (imageKey: string) => {
-  const { data } = supabase.storage.from('pictures').getPublicUrl(imageKey);
-  return data.publicUrl;
-};
+  const loadImageUrls = useCallback(async () => {
+    if (isLoaded) return; // prevents reloading
 
-useEffect(() => {
-  const fetchImageUrls = async () => {
     const urls: Record<string, string> = {};
     for (const [key, file] of Object.entries(imageKeys)) {
-      const { data } = supabase.storage.from('pictures').getPublicUrl(file);
-      urls[key] = data.publicUrl;
+      urls[key] = getImageUrl(file);
     }
-    // simulate slow load
+
+    // Simulate loading time
     await new Promise(resolve => setTimeout(resolve, 500));
-
+    
     setImageUrls(urls);
-    setIsMounted(true);
-  };
+    setIsLoaded(true);
+  }, [getImageUrl, isLoaded]);
 
-  fetchImageUrls();
-}, []);
-
-// function to get a "random" selection based on the current date
-const getDailyRandomSelection = (items: TrendingFood[], count: number = 3): TrendingFood[] => {
-  if (items.length <= count) return items;
-  
-  // use current date as seed for consistent daily selection
-  const today = new Date().toDateString();
-  const seed = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  
-  // random number generator
-  const seededRandom = (seed: number) => {
-    const x = Math.sin(seed) * 10000;
-    return x - Math.floor(x);
-  };
-  
-  // create a shuffled copy using seeded random
-  const shuffled = [...items];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(seededRandom(seed + i) * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  
-  return shuffled.slice(0, count);
+  return { imageUrls, isLoaded, loadImageUrls, getImageUrl };
 };
 
-  useEffect(() => {
-    const fetchTrendingFoods = async () => {
-      try {
-        setIsLoadingCarousel(true);
-        
-        const { data: trendingFoods, error } = await supabase
-          .from('trending_foods')
-          .select(`
-            trending_food_id,
-            image_key,
-            description,
-            cuisine_id,
-            cuisine_name
-          `);
-          
+// custom hook for trending foods
+const useTrendingFoods = (imageUrls: Record<string, string>, getImageUrl: (key: string) => string) => {
+  const [carouselImages, setCarouselImages] = useState<CarouselItems[]>([]);
+  const [isLoadingCarousel, setIsLoadingCarousel] = useState(true);
 
-        if (error) {
-          console.error('Error fetching trending foods:', error);
-          // fallback to hardcoded values if database query fails
-          setCarouselImages([
-            {
-              src: imageUrls.chickenrice,
-              description: 'Hainanese Chicken Rice - A Singaporean classic!',
-              cuisineId: '1',
-              cuisineName: 'Chinese',
-            },
-            {
-              src: imageUrls.malayrice,
-              description: 'Nasi Lemak - Fragrant rice with spicy sambal and more.',
-              cuisineId: '6',
-              cuisineName: 'Malaysian',
-            },
-            {
-              src: imageUrls.nasibriyani,
-              description: 'Nasi Briyani - Aromatic spiced rice with tender meat.',
-              cuisineId: '6',
-              cuisineName: 'Malaysian',
-            },
-          ]);
-          return;
-        }
+  // memorise the fallback data to prevent reloading
+  const fallbackCarouselImages = useMemo(() => [
+    {
+      src: imageUrls.chickenrice || getImageUrl('chicken-rice.png'),
+      description: 'Hainanese Chicken Rice - A Singaporean classic!',
+      cuisineId: '1',
+      cuisineName: 'Chinese',
+    },
+    {
+      src: imageUrls.malayrice || getImageUrl('nasi-lemak.png'),
+      description: 'Nasi Lemak - Fragrant rice with spicy sambal and more.',
+      cuisineId: '6',
+      cuisineName: 'Malaysian',
+    },
+    {
+      src: imageUrls.nasibriyani || getImageUrl('nasi-briyani.png'),
+      description: 'Nasi Briyani - Aromatic spiced rice with tender meat.',
+      cuisineId: '6',
+      cuisineName: 'Malaysian',
+    },
+  ], [imageUrls, getImageUrl]);
 
-        if (trendingFoods && trendingFoods.length > 0) {
-          // get the daily random selection
-          const dailySelection = getDailyRandomSelection(trendingFoods);
-          
-          // transform the data for carousel
-          const transformedImages: CarouselItems[] = dailySelection.map(item => ({
-            src: getImageUrl(item.image_key),
-            description: item.description,
-            cuisineId: item.cuisine_id,
-            cuisineName: item.cuisine_name,
-          }));
-          
-          setCarouselImages(transformedImages);
-        } else {
-          // no data found, use fallback
-          setCarouselImages([
-            {
-              src: imageUrls.chickenrice,
-              description: 'Hainanese Chicken Rice - A Singaporean classic!',
-              cuisineId: '1',
-              cuisineName: 'Chinese',
-            },
-            {
-              src: imageUrls.malayrice,
-              description: 'Nasi Lemak - Fragrant rice with spicy sambal and more.',
-              cuisineId: '6',
-              cuisineName: 'Malaysian',
-            },
-            {
-              src: imageUrls.nasibriyani,
-              description: 'Nasi Briyani - Aromatic spiced rice with tender meat.',
-              cuisineId: '6',
-              cuisineName: 'Malaysian',
-            },
-          ]);
-        }
-      } catch (error) {
-        console.error('Error in fetchTrendingFoods:', error);
-      } finally {
-        setIsLoadingCarousel(false);
-      }
+  // memorise the daily selection function so that it only changes daily
+  const getDailyRandomSelection = useCallback((items: TrendingFood[], count: number = 3): TrendingFood[] => {
+    if (items.length <= count) return items;
+    
+    const today = new Date().toDateString();
+    const seed = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    
+    const seededRandom = (seed: number) => {
+      const x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
     };
-    // only fetch when imageUrls are loaded
-    if (Object.keys(imageUrls).length > 0) {
+    
+    const shuffled = [...items];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(seededRandom(seed + i) * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    
+    return shuffled.slice(0, count);
+  }, []);
+
+  const fetchTrendingFoods = useCallback(async () => {
+    if (Object.keys(imageUrls).length === 0) return;
+
+    setIsLoadingCarousel(true);
+
+    try {
+      const { data: trendingFoods, error } = await supabase
+        .from('trending_foods')
+        .select(`
+          trending_food_id,
+          image_key,
+          description,
+          cuisine_id,
+          cuisine_name
+        `);
+
+      if (error || !trendingFoods?.length) {
+        console.error('Error fetching trending foods:', error);
+        setCarouselImages(fallbackCarouselImages);
+        return;
+      }
+
+      const dailySelection = getDailyRandomSelection(trendingFoods);
+      const transformedImages: CarouselItems[] = dailySelection.map(item => ({
+        src: getImageUrl(item.image_key),
+        description: item.description,
+        cuisineId: item.cuisine_id,
+        cuisineName: item.cuisine_name,
+      }));
+      
+      setCarouselImages(transformedImages);
+    } catch (error) {
+      console.error('Error in fetchTrendingFoods:', error);
+      setCarouselImages(fallbackCarouselImages);
+    } finally {
+      setIsLoadingCarousel(false);
+    }
+  }, [imageUrls, fallbackCarouselImages, getDailyRandomSelection, getImageUrl]);
+
+  return { carouselImages, isLoadingCarousel, fetchTrendingFoods };
+};
+
+function Home() {
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const router = useRouter();
+  
+  // custom hooks
+  const { username, fetchUser, isUserLoaded } = useUser();
+  const { imageUrls, isLoaded: imagesLoaded, loadImageUrls, getImageUrl } = useImageUrls();
+  const { carouselImages, isLoadingCarousel, fetchTrendingFoods } = useTrendingFoods(imageUrls, getImageUrl);
+  const { currentSlide, totalSlides, initializeCarousel } = useCarousel(carouselApi);
+
+  // initialise data
+  const initializeApp = useCallback(async () => {
+    await Promise.all([
+      loadImageUrls(),
+      fetchUser()
+    ]);
+  }, [loadImageUrls, fetchUser]);
+
+  // initialise app
+  React.useEffect(() => {
+    initializeApp();
+  }, [initializeApp]);
+
+  // fetch the trending foods when images are loaded
+  React.useEffect(() => {
+    if (imagesLoaded) {
       fetchTrendingFoods();
     }
-  }, [imageUrls]);
+  }, [imagesLoaded, fetchTrendingFoods]);
 
-  useEffect(() => {
-    if (!carouselApi) return;
+  // initialise the carousel when API is available
+  React.useEffect(() => {
+    if (carouselApi) {
+      return initializeCarousel();
+    }
+  }, [carouselApi, initializeCarousel]);
 
-    setTotalSlides(carouselApi.scrollSnapList().length);
-    setCurrentSlide(carouselApi.selectedScrollSnap() + 1);
-
-    const onSelect = () => {
-      setCurrentSlide(carouselApi.selectedScrollSnap() + 1);
-    };
-    carouselApi.on('select', onSelect);
-
-    const autoplayInterval = setInterval(() => {
-      const nextIndex =
-        (carouselApi.selectedScrollSnap() + 1) % carouselApi.scrollSnapList().length;
-      carouselApi.scrollTo(nextIndex);
-    }, 7000); // 7 seconds interval
-
-    return () => {
-      carouselApi.off('select', onSelect);
-      clearInterval(autoplayInterval);
-    };
-  }, [carouselApi]);
-
-    if (!isMounted || Object.keys(imageUrls).length === 0) {
-    return <LoadingScreen />;
-  }
-
-  {/* const carouselImage = [
-    {
-      src: imageUrls.chickenrice,
-      description: 'Hainanese Chicken Rice - A Singaporean classic!',
-    },
-    {
-      src: imageUrls.malayrice,
-      description: 'Nasi Lemak - Fragrant rice with spicy sambal and more.',
-    },
-    {
-      src: imageUrls.nasibriyani,
-      description: 'Nasi Briyani - Aromatic spiced rice with tender meat.',
-    },
-  ]; */}
-
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Logout error:', error.message);
     } else {
-      // optionally redirect to login/home page after logout
       router.push('/login');
     }
-  };
+  }, [router]);
 
-  const handleCarouselItemClick = (cuisineName: string) => {
-    // navigate to cuisine page with the cuisine ID
+  const handleCarouselItemClick = useCallback((cuisineName: string) => {
     router.push(`/cuisinePage/indiv-cuisines/${encodeURIComponent(cuisineName)}`);
-  };
+  }, [router]);
+
+  // show loading screen until everything is ready
+  if (!imagesLoaded || !isUserLoaded) {
+    return <LoadingScreen />;
+  }
 
   return (
     <ProtectedRoute>
-    <div className="Home">
-      <div className="background-img-1"></div>
-      <div className="header-container">
-        <div className="logo-section">
-          <Image id="Logo-1" src={imageUrls.logo} alt="Logo" width={240} height={80} />
-          <div className="Welcome-1">Welcome {username ? username : 'Guest'},</div>
-        </div>
-        
-        <div className="social-media-section">
-          <div className="social-icons">
-            <Image id="Instagram" src={imageUrls.instagram} alt="Instagram icon" width={50} height={50} />
-            <Image id="Twitter" src={imageUrls.twitter} alt="Twitter icon" width={50} height={50} />
-            <Image id="Facebook" src={imageUrls.facebook} alt="Facebook icon" width={50} height={50} />
-            <Image id="Tiktok" src={imageUrls.tiktok} alt="Tiktok icon" width={50} height={50} />
+      <div className="Home">
+        <div className="background-img-1"></div>
+        <div className="header-container">
+          <div className="logo-section">
+            <Image id="Logo-1" src={imageUrls.logo} alt="Logo" width={240} height={80} />
+            <div className="Welcome-1">Welcome {username || 'Guest'},</div>
           </div>
-          <button className="logout-button" onClick={handleLogout}>
-            <span>🚪</span> Log out
-          </button>
-        </div>
-      </div>
-
-      <div className="text-box-1">
-        <nav className="navigation-bar">
-          <div className="nav-container">
-            {/* <Link href="/home" className="nav-link active">
-              <span className="nav-icon">🏠</span>
-              <span className="nav-text">Home</span>
-            </Link> */}
-            <Link href="/cuisinePage" className="nav-link">
-              <span className="nav-icon">🍽️</span>
-              <span className="nav-text">Cuisines</span>
-            </Link>
-            <Link href="/popular" className="nav-link">
-              <span className="nav-icon">🔥</span>
-              <span className="nav-text">Popular</span>
-            </Link>
-            <Link href="/about" className="nav-link">
-              <span className="nav-icon">ℹ️</span>
-              <span className="nav-text">About</span>
-            </Link>
-            <Link href="../food-trail" className="nav-link special-link">
-              <span className="nav-icon">🗺️</span>
-              <span className="nav-text">Create Food Trail</span>
-            </Link>
-          </div>
-        </nav>
-
-        <div className="section-header">
-          <h2 className="section-title">🌟 Trending Today!</h2>
-        </div>
-
-        {/* carousel with autoplay */}
-        <div className="carousel">
-          {isLoadingCarousel ? (
-            <div className="carousel-loading">
-              <p>Loading trending foods...</p>
+          
+          <div className="social-media-section">
+            <div className="social-icons">
+              <Image id="Instagram" src={imageUrls.instagram} alt="Instagram icon" width={50} height={50} />
+              <Image id="Twitter" src={imageUrls.twitter} alt="Twitter icon" width={50} height={50} />
+              <Image id="Facebook" src={imageUrls.facebook} alt="Facebook icon" width={50} height={50} />
+              <Image id="Tiktok" src={imageUrls.tiktok} alt="Tiktok icon" width={50} height={50} />
             </div>
-          ) : (
-            <Carousel setApi={setCarouselApi} className="w-full">
-              <CarouselContent>
-                {carouselImages.map((item, index) => (
-                  <CarouselItem key={index}>
-                    <Card>
-                      <CardContent className="flex flex-col items-center justify-center p-4">
-                        <div 
-                          className="carousel-item-clickable"
-                          onClick={() => handleCarouselItemClick(item.cuisineName||'Unknown')}
-                          style={{ cursor: 'pointer' }}
-                        >
-                          <Image 
-                            src={item.src} 
-                            alt={`trending-food-${index}`}  
-                            className="carousel-img" 
-                            width={2000} 
-                            height={200} 
-                            style={{ borderRadius: '20px' }} 
-                          />
-                          <p className="carousel-description mt-2 text-center">
-                            {item.description}
-                            {item.cuisineName && (
-                              <span className="cuisine-badge" style={{ 
-                                display: 'block', 
-                                fontSize: '0.9em', 
-                                color: '#666', 
-                                marginTop: '4px' 
-                              }}>
-                              </span>
-                              
-                            )}
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious />
-              <CarouselNext />
-            </Carousel>
-          )}
-          <div className="carousel-indicator">
-            Slide {currentSlide} of {totalSlides}
+            <button className="logout-button" onClick={handleLogout}>
+              <span>🚪</span> Log out
+            </button>
           </div>
         </div>
 
-        <div className="section-header">
-          <h2 className="section-title">📰 Fresh from the Community</h2>
-        </div>
-
-        <div className="community-posts">
-          <div className="newspaper-background">
-            <Image id="Newspaper" src={imageUrls.newspaper} alt="Newspaper" width={1700} height={900} />
-          </div>
-
-          {/* Comment Box 1 */}
-          <div className="post-card">
-            <div className="post-content">
-              <h3 className="post-title">Cheap and affordable western at ang mo kio coffeeshop</h3>
-              <div className="post-details">
-                <div className="post-info">
-                  <div className="rating-container">
-                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
-                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
-                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
-                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
-                    <Image src={imageUrls.halfstar} alt="half star" width={25} height={25} />
-                  </div>
-                  <div className="post-author">By: Foodreviewer123</div>
-                </div>
-                <div className="post-image">
-                  <Image src={imageUrls.western} alt="Western food demo" width={200} height={120} />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Comment Box 2 */}
-          <div className="post-card">
-            <div className="post-content">
-              <h3 className="post-title">Best Yong Tau Fu in Singapore, must try!</h3>
-              <div className="post-details">
-                <div className="post-info">
-                  <div className="rating-container">
-                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
-                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
-                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
-                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
-                    <Image src={imageUrls.halfstar} alt="half star" width={25} height={25} />
-                  </div>
-                  <div className="post-author">By: ilovefood123</div>
-                </div>
-                <div className="post-image">
-                  <Image src={imageUrls.yongtaufu} alt="Yong Tau Fu demo" width={200} height={120} />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Comment Box 3 */}
-          <div className="post-card">
-            <div className="post-content">
-              <h3 className="post-title">Best nasi lemak in Singapore, must try!</h3>
-              <div className="post-details">
-                <div className="post-info">
-                  <div className="rating-container">
-                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
-                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
-                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
-                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
-                    <Image src={imageUrls.star} alt="star" width={25} height={25} />
-                  </div>
-                  <div className="post-author">By: foodislife123</div>
-                </div>
-                <div className="post-image">
-                  <Image src={imageUrls.nasilemak} alt="Nasi Lemak demo" width={200} height={120} />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="see-more-container">
-          <Link href="/cuisinePage" className="see-more-button">
-            See More →
-          </Link>
-        </div>
-
-        <div className="cta-section">
-          <div className="cta-background">
-            <Image src={imageUrls.foodtrail} alt="Food trail background" width={1700} height={600} />
-            <div className="cta-overlay"></div>
-            <div className="cta-content">
-              <h2 className="cta-title">Ready to explore?</h2>
-              <p className="cta-subtitle">Create your personalized food trail and discover hidden gems</p>
-              <Link href="../food-trail" className="cta-button">
-                Create Your Food Trail
+        <div className="text-box-1">
+          <nav className="navigation-bar">
+            <div className="nav-container">
+              <Link href="/cuisinePage" className="nav-link">
+                <span className="nav-icon">🍽️</span>
+                <span className="nav-text">Cuisines</span>
+              </Link>
+              <Link href="/popular" className="nav-link">
+                <span className="nav-icon">🔥</span>
+                <span className="nav-text">Popular</span>
+              </Link>
+              <Link href="/about" className="nav-link">
+                <span className="nav-icon">ℹ️</span>
+                <span className="nav-text">About</span>
+              </Link>
+              <Link href="../food-trail" className="nav-link special-link">
+                <span className="nav-icon">🗺️</span>
+                <span className="nav-text">Create Food Trail</span>
               </Link>
             </div>
+          </nav>
+
+          <div className="section-header">
+            <h2 className="section-title">🌟 Trending Today!</h2>
+          </div>
+
+          <div className="carousel">
+            {isLoadingCarousel ? (
+              <div className="carousel-loading">
+                <p>Loading trending foods...</p>
+              </div>
+            ) : (
+              <Carousel setApi={setCarouselApi} className="w-full">
+                <CarouselContent>
+                  {carouselImages.map((item, index) => (
+                    <CarouselItem key={index}>
+                      <Card>
+                        <CardContent className="flex flex-col items-center justify-center p-4">
+                          <div 
+                            className="carousel-item-clickable"
+                            onClick={() => handleCarouselItemClick(item.cuisineName || 'Unknown')}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <Image 
+                              src={item.src} 
+                              alt={`trending-food-${index}`}  
+                              className="carousel-img" 
+                              width={2000} 
+                              height={200} 
+                              style={{ borderRadius: '20px' }} 
+                            />
+                            <p className="carousel-description mt-2 text-center">
+                              {item.description}
+                              {item.cuisineName && (
+                                <span className="cuisine-badge" style={{ 
+                                  display: 'block', 
+                                  fontSize: '0.9em', 
+                                  color: '#666', 
+                                  marginTop: '4px' 
+                                }}>
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious />
+                <CarouselNext />
+              </Carousel>
+            )}
+            <div className="carousel-indicator">
+              Slide {currentSlide} of {totalSlides}
+            </div>
+          </div>
+
+          <div className="section-header">
+            <h2 className="section-title">📰 Fresh from the Community</h2>
+          </div>
+
+          <div className="community-posts">
+            <div className="newspaper-background">
+              <Image id="Newspaper" src={imageUrls.newspaper} alt="Newspaper" width={1700} height={900} />
+            </div>
+
+            <div className="post-card">
+              <div className="post-content">
+                <h3 className="post-title">Cheap and affordable western at ang mo kio coffeeshop</h3>
+                <div className="post-details">
+                  <div className="post-info">
+                    <div className="rating-container">
+                      <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                      <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                      <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                      <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                      <Image src={imageUrls.halfstar} alt="half star" width={25} height={25} />
+                    </div>
+                    <div className="post-author">By: Foodreviewer123</div>
+                  </div>
+                  <div className="post-image">
+                    <Image src={imageUrls.western} alt="Western food demo" width={200} height={120} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="post-card">
+              <div className="post-content">
+                <h3 className="post-title">Best Yong Tau Fu in Singapore, must try!</h3>
+                <div className="post-details">
+                  <div className="post-info">
+                    <div className="rating-container">
+                      <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                      <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                      <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                      <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                      <Image src={imageUrls.halfstar} alt="half star" width={25} height={25} />
+                    </div>
+                    <div className="post-author">By: ilovefood123</div>
+                  </div>
+                  <div className="post-image">
+                    <Image src={imageUrls.yongtaufu} alt="Yong Tau Fu demo" width={200} height={120} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="post-card">
+              <div className="post-content">
+                <h3 className="post-title">Best nasi lemak in Singapore, must try!</h3>
+                <div className="post-details">
+                  <div className="post-info">
+                    <div className="rating-container">
+                      <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                      <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                      <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                      <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                      <Image src={imageUrls.star} alt="star" width={25} height={25} />
+                    </div>
+                    <div className="post-author">By: foodislife123</div>
+                  </div>
+                  <div className="post-image">
+                    <Image src={imageUrls.nasilemak} alt="Nasi Lemak demo" width={200} height={120} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="see-more-container">
+            <Link href="/cuisinePage" className="see-more-button">
+              See More →
+            </Link>
+          </div>
+
+          <div className="cta-section">
+            <div className="cta-background">
+              <Image src={imageUrls.foodtrail} alt="Food trail background" width={1700} height={600} />
+              <div className="cta-overlay"></div>
+              <div className="cta-content">
+                <h2 className="cta-title">Ready to explore?</h2>
+                <p className="cta-subtitle">Create your personalized food trail and discover hidden gems</p>
+                <Link href="../food-trail" className="cta-button">
+                  Create Your Food Trail
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="footer-quote">
+            <p>~Redefining food discovery~</p>
           </div>
         </div>
-
-        <div className="footer-quote">
-          <p>~Redefining food discovery~</p>
-        </div>
       </div>
-    </div>
     </ProtectedRoute>
   );
 }
