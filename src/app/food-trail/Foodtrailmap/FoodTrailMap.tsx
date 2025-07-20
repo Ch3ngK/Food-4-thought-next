@@ -50,7 +50,7 @@ interface WindowWithGoogle extends Window {
   google?: {
     maps: {
       places: {
-        PlacesService: new (div: HTMLDivElement) => google.maps.places.PlacesService;
+        PlacesService: typeof google.maps.places.PlacesService;
         PlacesServiceStatus: typeof google.maps.places.PlacesServiceStatus;
       };
       LatLng: typeof google.maps.LatLng;
@@ -118,14 +118,18 @@ useEffect(() => {
 const getPlaceCoords = async (query: string): Promise<Location | null> => {
   const win = window as WindowWithGoogle;
 
-  if (!win.google?.maps) {
-    console.warn('Google Maps API not loaded');
+  // More thorough null checking
+  if (!win.google || !win.google.maps || !win.google.maps.places) {
+    console.warn('Google Maps Places API not loaded');
     return null;
   }
 
+  const { maps } = win.google;
+  const { places, LatLng, LatLngBounds, Geocoder } = maps;
+
   return new Promise((resolve) => {
     try {
-      const service = new win.google.maps.places.PlacesService(
+      const service = new places.PlacesService(
         document.createElement('div')
       );
 
@@ -133,11 +137,11 @@ const getPlaceCoords = async (query: string): Promise<Location | null> => {
       service.textSearch(
         {
           query: `${query}, Singapore`,
-          location: new win.google.maps.LatLng(1.3521, 103.8198),
+          location: new LatLng(1.3521, 103.8198),
           radius: 5000
         },
         (results, status) => {
-          if (status === win.google.maps.places.PlacesServiceStatus.OK && 
+          if (status === places.PlacesServiceStatus.OK && 
               results?.[0]?.geometry?.location) {
             console.log(`Found "${query}" via textSearch`);
             resolve({
@@ -152,13 +156,13 @@ const getPlaceCoords = async (query: string): Promise<Location | null> => {
               {
                 query: `${query}, Singapore`,
                 fields: ['name', 'geometry'],
-                locationBias: new win.google.maps.LatLngBounds(
-                  new win.google.maps.LatLng(1.2, 103.6),
-                  new win.google.maps.LatLng(1.5, 104.0)
+                locationBias: new LatLngBounds(
+                  new LatLng(1.2, 103.6),
+                  new LatLng(1.5, 104.0)
                 )
               },
               (findResults, findStatus) => {
-                if (findStatus === win.google.maps.places.PlacesServiceStatus.OK && 
+                if (findStatus === places.PlacesServiceStatus.OK && 
                     findResults?.[0]?.geometry?.location) {
                   console.log(`Found "${query}" via findPlaceFromQuery`);
                   resolve({
@@ -169,10 +173,10 @@ const getPlaceCoords = async (query: string): Promise<Location | null> => {
                 } else {
                   // Final fallback to geocoding
                   console.log(`Trying geocoding for "${query}"`);
-                  new win.google.maps.Geocoder().geocode(
+                  new Geocoder().geocode(
                     { address: `${query}, Singapore` },
                     (geoResults, geoStatus) => {
-                      if (geoStatus === win.google.maps.GeocoderStatus.OK && 
+                      if (geoStatus === google.maps.GeocoderStatus.OK && 
                           geoResults?.[0]?.geometry?.location) {
                         console.log(`Found "${query}" via geocoding`);
                         resolve({
