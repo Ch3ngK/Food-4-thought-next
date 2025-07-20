@@ -46,17 +46,17 @@ export default function FoodTrailMap() {
   const [mapLoaded, setMapLoaded] = useState(false);
   const locationParam = searchParams.get('location');
 
-  interface WindowWithGoogle extends Window {
+interface WindowWithGoogle extends Window {
   google?: {
     maps: {
       places: {
-        PlacesService: new (div: HTMLDivElement) => any;
-        PlacesServiceStatus: {
-          OK: string;
-          ZERO_RESULTS: string;
-          [key: string]: string;
-        };
+        PlacesService: new (div: HTMLDivElement) => google.maps.places.PlacesService;
+        PlacesServiceStatus: typeof google.maps.places.PlacesServiceStatus;
       };
+      LatLng: typeof google.maps.LatLng;
+      LatLngBounds: typeof google.maps.LatLngBounds;
+      Geocoder: typeof google.maps.Geocoder;
+      GeocoderStatus: typeof google.maps.GeocoderStatus;
     };
   };
 }
@@ -118,31 +118,27 @@ useEffect(() => {
 const getPlaceCoords = async (query: string): Promise<Location | null> => {
   const win = window as WindowWithGoogle;
 
-  // Guard clause: if google maps places is undefined, return null early
-  if (
-    !win.google || 
-    !win.google.maps || 
-    !win.google.maps.places || 
-    !win.google.maps.places.PlacesService
-  ) {
-    console.warn('Google Maps Places API not loaded');
+  if (!win.google?.maps) {
+    console.warn('Google Maps API not loaded');
     return null;
   }
 
   return new Promise((resolve) => {
     try {
-      // Use non-null assertions (!) here to assure TS this is defined
-      const service = new win.google!.maps!.places!.PlacesService(document.createElement('div'));
+      const service = new win.google.maps.places.PlacesService(
+        document.createElement('div')
+      );
 
       // First try textSearch which is more flexible
       service.textSearch(
         {
           query: `${query}, Singapore`,
-          location: new win.google!.maps!.LatLng(1.3521, 103.8198),
+          location: new win.google.maps.LatLng(1.3521, 103.8198),
           radius: 5000
         },
         (results, status) => {
-          if (status === win.google!.maps!.places!.PlacesServiceStatus.OK && results?.[0]?.geometry?.location) {
+          if (status === win.google.maps.places.PlacesServiceStatus.OK && 
+              results?.[0]?.geometry?.location) {
             console.log(`Found "${query}" via textSearch`);
             resolve({
               name: results[0].name || query,
@@ -156,13 +152,13 @@ const getPlaceCoords = async (query: string): Promise<Location | null> => {
               {
                 query: `${query}, Singapore`,
                 fields: ['name', 'geometry'],
-                locationBias: new win.google!.maps!.LatLngBounds(
-                  new win.google!.maps!.LatLng(1.2, 103.6),
-                  new win.google!.maps!.LatLng(1.5, 104.0)
+                locationBias: new win.google.maps.LatLngBounds(
+                  new win.google.maps.LatLng(1.2, 103.6),
+                  new win.google.maps.LatLng(1.5, 104.0)
                 )
               },
               (findResults, findStatus) => {
-                if (findStatus === win.google!.maps!.places!.PlacesServiceStatus.OK && 
+                if (findStatus === win.google.maps.places.PlacesServiceStatus.OK && 
                     findResults?.[0]?.geometry?.location) {
                   console.log(`Found "${query}" via findPlaceFromQuery`);
                   resolve({
@@ -173,14 +169,14 @@ const getPlaceCoords = async (query: string): Promise<Location | null> => {
                 } else {
                   // Final fallback to geocoding
                   console.log(`Trying geocoding for "${query}"`);
-                  new win.google!.maps!.Geocoder().geocode(
+                  new win.google.maps.Geocoder().geocode(
                     { address: `${query}, Singapore` },
                     (geoResults, geoStatus) => {
-                      if (geoStatus === win.google!.maps!.GeocoderStatus.OK && 
+                      if (geoStatus === win.google.maps.GeocoderStatus.OK && 
                           geoResults?.[0]?.geometry?.location) {
                         console.log(`Found "${query}" via geocoding`);
                         resolve({
-                          name: query, // Use original name since geocoding might return different
+                          name: query,
                           lat: geoResults[0].geometry.location.lat(),
                           lng: geoResults[0].geometry.location.lng()
                         });
