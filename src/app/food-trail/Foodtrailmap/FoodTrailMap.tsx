@@ -19,6 +19,10 @@ interface Location {
   lng: number;
 }
 
+interface WindowWithGoogle extends Window {
+  google: typeof google;
+}
+
 export default function FoodTrailMap() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
