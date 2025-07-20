@@ -104,7 +104,7 @@ function Login() {
       
       <main className="login-content">
         <div className="logo-section-login">
-          {chefUrl && <Image 
+          {chefUrl && <Image
             src={chefUrl} 
             alt="Chef Image" 
             width={80} 

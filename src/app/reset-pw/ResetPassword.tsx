@@ -6,16 +6,23 @@ import { supabase } from '../supabaseClient';
 import './ResetPassword.css';
 import Image from 'next/image';
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AlertCircleIcon, CheckCircle2Icon } from 'lucide-react';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
 
 function ResetPassword() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [logoUrl, setLogoUrl] = useState('');
-  const [chefUrl, setChefUrl] = useState('');
+  const [passIconUrl, setPassIconUrl] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
   const [sessionLoaded, setSessionLoaded] = useState(false);
 
@@ -24,16 +31,19 @@ function ResetPassword() {
     setHasMounted(true);
   }, []);
 
-  // Fetch image URLs
+  // Load images
   useEffect(() => {
-    const fetchImages = async () => {
+    const loadImages = async () => {
       const { data: logo } = supabase.storage.from('pictures').getPublicUrl('Food4Thought.png');
-      const { data: chef } = supabase.storage.from('pictures').getPublicUrl('chef.png');
+      const { data: pass } = supabase.storage.from('pictures').getPublicUrl('password-icon.png');
+
       setLogoUrl(logo.publicUrl);
-      setChefUrl(chef.publicUrl);
+      setPassIconUrl(pass.publicUrl);
     };
 
-    if (hasMounted) fetchImages();
+    if (hasMounted) {
+      loadImages();
+    }
   }, [hasMounted]);
 
   // Set Supabase session from query parameters (for recovery token)
@@ -50,82 +60,157 @@ function ResetPassword() {
         .then(({ error }) => {
           if (error) {
             console.error('Session error:', error.message);
-            setError("Invalid or expired link. Please try resetting your password again.");
+            setErrorMsg("Invalid or expired link. Please try resetting your password again.");
           } else {
             setSessionLoaded(true);
           }
         });
     } else {
-      setError("Missing recovery token. Please use the password reset link from your email.");
+      setErrorMsg("Missing recovery token. Please use the password reset link from your email.");
     }
   }, [searchParams]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setMessage('');
+    setErrorMsg('');
+    setShowSuccessAlert(false);
 
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match.");
+    // improved data input validation
+    if (!newPassword || !confirmPassword) {
+      setErrorMsg('All fields are required');
       return;
     }
 
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (newPassword !== confirmPassword) {
+      setErrorMsg('Passwords do not match');
+      return;
+    }
 
-    if (error) {
-      setError(error.message);
-    } else {
-      setMessage("Password updated successfully! Redirecting to login...");
-      setTimeout(() => router.push('/login'), 3000);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+      if (error) {
+        throw error;
+      }
+
+      setShowSuccessAlert(true);
+      setNewPassword('');
+      setConfirmPassword('');
+      
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      router.push('/login');
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMsg(error.message);
+      } else {
+        setErrorMsg('An unknown error occurred while updating password');
+      }
     }
   };
 
   if (!hasMounted) return null;
 
   return (
-    <div className="reset-password">
-      <div className="background-img-rp">
-        {chefUrl && (
-          <Image id="Chef-rp" src={chefUrl} alt="Chef" width={100} height={100} />
-        )}
-        <div className="text-box-rp">
-          {logoUrl && (
-            <Image id="Logo-rp" src={logoUrl} alt="Logo" width={250} height={100} />
+    <div className="reset-password-container">
+      
+      <div className="alert-container-reset">
+        <div className="alert-wrapper-reset">
+          {showSuccessAlert && (
+            <Alert className="alert-reset success">
+              <CheckCircle2Icon className="alert-icon-reset" />
+              <div>
+                <AlertTitle className="alert-title-reset">Password Updated!</AlertTitle>
+                <AlertDescription className="alert-description-reset">
+                  Your password has been successfully updated. Redirecting you to login...
+                </AlertDescription>
+              </div>
+            </Alert>
           )}
-          <br /><br /><br /><br /><br />
-          <div className='Reset-pw-text'>Reset Your Password</div>
-
-          {!sessionLoaded ? (
-            <div style={{ color: 'red', marginTop: '1rem' }}>{error || 'Loading session...'}</div>
-          ) : (
-            <form onSubmit={handleResetPassword}>
-              <Input
-                type="password"
-                placeholder="New Password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                className="pr-15 focus-visible:ring-3 focus-visible:ring-orange-500 focus:border-orange-500"
-              />
-              <br />
-              <Input
-                type="password"
-                placeholder="Confirm New Password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                className="pr-15 focus-visible:ring-3 focus-visible:ring-orange-500 focus:border-orange-500"
-              />
-              <button className="update-password-button" type="submit">
-                Update Password
-              </button>
-            </form>
+          {errorMsg && (
+            <Alert variant="destructive" className="alert-reset error">
+              <AlertCircleIcon className="alert-icon-reset" />
+              <div>
+                <AlertTitle className="alert-title-reset">Error</AlertTitle>
+                <AlertDescription className="alert-description-reset">
+                  {errorMsg} Please try again.
+                </AlertDescription>
+              </div>
+            </Alert>
           )}
-
-          {error && <div className='rp-error' style={{ color: 'red' }}>{error}</div>}
-          {message && <p style={{ color: 'green' }}>{message}</p>}
         </div>
       </div>
+
+      <div className="background-img"></div>
+      
+      <main className="reset-password-content">
+        <div className="logo-section-reset">
+          <div className="welcome-text-reset">Welcome back to</div>
+          {logoUrl && <Image 
+            src={logoUrl} 
+            alt="Logo" 
+            width={200} 
+            height={80} 
+            className="logo-image"
+            priority
+          />}
+        </div>
+
+        <h1 className="reset-password-title">Reset Your Password</h1>
+
+        {!sessionLoaded ? (
+          <div className="loading-container">
+            <div className="loading-text">Loading session...</div>
+          </div>
+        ) : (
+          <form onSubmit={handleResetPassword} className="reset-password-form">
+            <div className="input-group">
+              <Label htmlFor="newPassword">New Password</Label>
+              <div className="input-wrapper">
+                <Input
+                  name="newPassword"
+                  type="password"
+                  placeholder="Enter new password"
+                  required
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="reset-password-input"
+                />
+                {passIconUrl && <Image 
+                  src={passIconUrl} 
+                  alt="Password Icon" 
+                  width={20} 
+                  height={20} 
+                  className="input-icon"
+                />}
+              </div>
+            </div>
+
+            <div className="input-group">
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <div className="input-wrapper">
+                <Input
+                  name="confirmPassword"
+                  type="password"
+                  placeholder="Confirm new password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="reset-password-input"
+                />
+                {passIconUrl && <Image 
+                  src={passIconUrl} 
+                  alt="Password Icon" 
+                  width={20} 
+                  height={20} 
+                  className="input-icon"
+                />}
+              </div>
+            </div>
+
+            <button type="submit" className="reset-password-button">Update Password</button>
+          </form>
+        )}
+      </main>
     </div>
   );
 }

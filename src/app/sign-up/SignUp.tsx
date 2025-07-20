@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import './SignUp.css';
 import Image from 'next/image';
+import Link from 'next/link';
 import { supabase } from '../supabaseClient';
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { AlertCircleIcon, CheckCircle2Icon } from 'lucide-react';
 import {
   Alert,
@@ -14,43 +15,51 @@ import {
   AlertTitle,
 } from "@/components/ui/alert";
 
-
-
 function SignUp() {
+  const router = useRouter();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [errorMsg, setErrorMsg] = useState(false);
-  const [successMsg, setSuccessMsg] = useState(false);
-  const router = useRouter();
-
-  // new image URLs
+  const [errorMsg, setErrorMsg] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
+  const [userIconUrl, setUserIconUrl] = useState('');
+  const [passIconUrl, setPassIconUrl] = useState('');
   const [chefUrl, setChefUrl] = useState('');
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
   useEffect(() => {
-    const fetchImageUrls = async () => {
+    const loadImages = async () => {
       const { data: logo } = supabase.storage.from('pictures').getPublicUrl('Food4Thought.png');
+      const { data: user } = supabase.storage.from('pictures').getPublicUrl('user-icon.png');
+      const { data: pass } = supabase.storage.from('pictures').getPublicUrl('password-icon.png');
       const { data: chef } = supabase.storage.from('pictures').getPublicUrl('chef.png');
 
       setLogoUrl(logo.publicUrl);
+      setUserIconUrl(user.publicUrl);
+      setPassIconUrl(pass.publicUrl);
       setChefUrl(chef.publicUrl);
     };
-
-    fetchImageUrls();
+    loadImages();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg(false);
-    setSuccessMsg(false);
+    setErrorMsg('');
+    setShowSuccessAlert(false);
 
+    // improved input validation
     if (!username || !email || !password || !confirmPassword) {
-      setErrorMsg(true);
-    } else if (password !== confirmPassword) {
-      setErrorMsg(true);
-    } else {
+      setErrorMsg('All fields are required');
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      setErrorMsg('Passwords do not match');
+      return;
+    }
+
+    try {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -59,103 +68,171 @@ function SignUp() {
         },
       });
 
-      if (error && !data?.user) {
-        setErrorMsg(true);
+      if (error) {
+        throw error;
+      }
+
+      setShowSuccessAlert(true);
+      setUsername('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      router.push('./login');
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMsg(error.message);
       } else {
-        setSuccessMsg(true);
-        setUsername('');
-        setEmail('');
-        setPassword('');
-        setConfirmPassword('');
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        router.push('./login');
+        setErrorMsg('An unknown error occurred during sign up');
       }
     }
   };
 
   return (
-
-    <div className="SignUp">
+    <div className="signup-container">
       
-      <div className="background-img-3">
-      <div className="top-0 left-0 right-0 flex justify-center z-50 pt-4">
-        <div className="w-full max-w-md px-4 flex justify-center">
-        {successMsg && (
-          <Alert className="mb-4 bg-green-100 border-green-200 text-green-700 animate-slideDown">
-          <CheckCircle2Icon className="h-4 w-4 text-green-500" />
-          <AlertTitle>Signup Successful !</AlertTitle>
-          <AlertDescription>Redirecting you to the login page to log in...</AlertDescription>
-          </Alert>
-        )}
-
-        {errorMsg && (
-          <Alert variant="destructive" className="mb-0 animate-slideDown">
-            <AlertCircleIcon className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{errorMsg}. Please try signing up again. </AlertDescription>
-          </Alert>
-        )}
-      
-        <div className="text-box-3">
-          {chefUrl && <Image id="Chef-3" src={chefUrl} alt="Chef Image" width={100} height={100} />}
-          <br />
-          {logoUrl && <Image id="Logo-signup" src={logoUrl} alt="Food 4 Thought Logo" width={250} height={100} />}
-          <br />
-          <div className="Sign-up-text">Sign up</div>
-          <div className="flex flex-col space-y-2 mx-auto translate-x-8 translate-y-2">
-          <form onSubmit={handleSubmit}>
-            <Input
-              type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              className = "pr-10 focus-visible:ring-3 focus-visible:ring-orange-500 focus:border-orange-500"
-            />
-            <br />
-            <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className = "pr-10 focus-visible:ring-3 focus-visible:ring-orange-500 focus:border-orange-500"
-            />
-            <br />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className = "pr-10 focus-visible:ring-3 focus-visible:ring-orange-500 focus:border-orange-500"
-            />
-            <br />
-            <Input
-              type="password"
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              className = "pr-10 focus-visible:ring-3 focus-visible:ring-orange-500 focus:border-orange-500"
-            />
-            <br />
-            <button type="submit" className = "-translate-x-8">Sign Up</button>
-          </form>
-          </div>
-          
-
-          {errorMsg && <p style={{ color: 'red' }}>{errorMsg}</p>}
-          {successMsg && <p style={{ color: 'green' }}>{successMsg}</p>}
-
-          <br />
-          <Link href="/login">Back to Login</Link>
+      <div className="alert-container-signup">
+        <div className="alert-wrapper-signup">
+          {showSuccessAlert && (
+            <Alert className="alert-signup success">
+              <CheckCircle2Icon className="alert-icon-signup" />
+              <div>
+                <AlertTitle className="alert-title-signup">Sign Up Successful!</AlertTitle>
+                <AlertDescription className="alert-description-signup">
+                  Please check your email to verify your account. Redirecting you to login...
+                </AlertDescription>
+              </div>
+            </Alert>
+          )}
+          {errorMsg && (
+            <Alert variant="destructive" className="alert-signup error">
+              <AlertCircleIcon className="alert-icon-signup" />
+              <div>
+                <AlertTitle className="alert-title-signup">Error</AlertTitle>
+                <AlertDescription className="alert-description-signup">
+                  {errorMsg}. Please try again.
+                </AlertDescription>
+              </div>
+            </Alert>
+          )}
         </div>
       </div>
+
+      <div className="background-img"></div>
+      
+      <main className="signup-content">
+        <div className="logo-section-signup">
+          <div className="welcome-text-signup">Welcome to</div>
+          {logoUrl && <Image 
+            src={logoUrl} 
+            alt="Logo" 
+            width={200} 
+            height={80} 
+            className="logo-image"
+            priority
+          />}
+        </div>
+
+        <h1 className="signup-title">Sign Up</h1>
+
+        <form onSubmit={handleSignUp} className="signup-form">
+          <div className="input-group">
+            <Label htmlFor="username">Username</Label>
+            <div className="input-wrapper">
+              <Input
+                name="username"
+                type="text"
+                placeholder="Your preferred username"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="signup-input"
+              />
+              {userIconUrl && <Image 
+                src={userIconUrl} 
+                alt="User Icon" 
+                width={20} 
+                height={20} 
+                className="input-icon"
+              />}
+            </div>
+          </div>
+
+          <div className="input-group">
+            <Label htmlFor="email">Email</Label>
+            <div className="input-wrapper">
+              <Input
+                name="email"
+                type="email"
+                placeholder="abc@xyz.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="signup-input"
+              />
+              {userIconUrl && <Image 
+                src={userIconUrl} 
+                alt="User Icon" 
+                width={20} 
+                height={20} 
+                className="input-icon"
+              />}
+            </div>
+          </div>
+
+          <div className="input-group">
+            <Label htmlFor="password">Password</Label>
+            <div className="input-wrapper">
+              <Input
+                name="password"
+                type="password"
+                placeholder="Password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="signup-input"
+              />
+              {passIconUrl && <Image 
+                src={passIconUrl} 
+                alt="Password Icon" 
+                width={20} 
+                height={20} 
+                className="input-icon"
+              />}
+            </div>
+          </div>
+
+          <div className="input-group">
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <div className="input-wrapper">
+              <Input
+                name="confirmPassword"
+                type="password"
+                placeholder="Confirm Password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="signup-input"
+              />
+              {passIconUrl && <Image 
+                src={passIconUrl} 
+                alt="Password Icon" 
+                width={20} 
+                height={20} 
+                className="input-icon"
+              />}
+            </div>
+          </div>
+
+          <button type="submit" className="signup-button">Sign Up</button>
+        </form>
+
+        <div className="login-link">
+          Already have an account? <Link href="/login">Login here</Link>
+        </div>
+      </main>
     </div>
-    </div>
-    </div>
-   
   );
 }
 
