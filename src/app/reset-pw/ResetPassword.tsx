@@ -16,49 +16,47 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
 
   // Load Supabase session from hash fragment
   useEffect(() => {
+    // First check if we're in the browser (window exists)
+    if (typeof window === 'undefined') return;
+
+    // Parse the hash fragment from the URL
     const hash = window.location.hash;
     if (hash) {
       const params = new URLSearchParams(hash.substring(1)); // Remove the '#'
-      const at = params.get('access_token');
-      const rt = params.get('refresh_token');
-
-      if (at && rt) {
-        setAccessToken(at);
-        setRefreshToken(rt);
+      const type = params.get('type');
+      
+      // Supabase password reset links use 'recovery' type
+      if (type === 'recovery') {
+        // Get the full access token from the hash
+        const accessToken = hash.split('access_token=')[1]?.split('&')[0];
+        const refreshToken = hash.split('refresh_token=')[1]?.split('&')[0];
+        
+        if (accessToken && refreshToken) {
+          supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          }).then(({ error }) => {
+            if (error) {
+              console.error("Session error:", error.message);
+              setError("Invalid or expired reset link. Please request a new one.");
+            } else {
+              setSessionLoaded(true);
+            }
+          });
+        } else {
+          setError("Missing recovery token. Please use the password reset link from your email.");
+        }
       } else {
-        setError("Missing recovery token. Please use the password reset link from your email.");
+        setError("Invalid reset link. Please use the password reset link from your email.");
       }
     } else {
       setError("Missing recovery token. Please use the password reset link from your email.");
     }
   }, []);
-
-  // Set session once tokens are available
-  useEffect(() => {
-    const setSession = async () => {
-      if (accessToken && refreshToken) {
-        const { error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken
-        });
-
-        if (error) {
-          console.error("Session error:", error.message);
-          setError("Invalid or expired reset link. Please request a new one.");
-        } else {
-          setSessionLoaded(true);
-        }
-      }
-    };
-
-    setSession();
-  }, [accessToken, refreshToken]);
 
   // Load assets (optional)
   useEffect(() => {
@@ -85,7 +83,7 @@ export default function ResetPassword() {
       return;
     }
 
-    const { data, error } = await supabase.auth.updateUser({
+    const { error } = await supabase.auth.updateUser({
       password: newPassword,
     });
 
