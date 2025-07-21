@@ -15,11 +15,9 @@ export default function ResetPassword() {
   const router = useRouter();
 
   useEffect(() => {
-    // Avoid server-side rendering issues
     if (typeof window === 'undefined') return;
 
-    const hash = window.location.hash.substring(1); // remove '#'
-    const params = new URLSearchParams(hash);
+    const params = new URLSearchParams(window.location.search); // <-- updated
     const type = params.get('type');
     const accessToken = params.get('access_token');
     const refreshToken = params.get('refresh_token');
@@ -99,3 +97,4 @@ export default function ResetPassword() {
     </div>
   );
 }
+
