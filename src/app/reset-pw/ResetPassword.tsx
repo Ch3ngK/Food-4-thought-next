@@ -14,32 +14,32 @@ export default function ResetPassword() {
   const [tokenProcessed, setTokenProcessed] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+useEffect(() => {
+  if (typeof window === 'undefined') return;
 
-    const params = new URLSearchParams(window.location.search); // <-- updated
-    const type = params.get('type');
-    const accessToken = params.get('access_token');
-    const refreshToken = params.get('refresh_token');
+  const hashParams = new URLSearchParams(window.location.hash.substring(1)); // <-- use hash instead of search
+  const type = hashParams.get('type');
+  const accessToken = hashParams.get('access_token');
+  const refreshToken = hashParams.get('refresh_token');
 
-    if (type === 'recovery' && accessToken) {
-      supabase.auth
-        .setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken ?? '',
-        })
-        .then(({ error }) => {
-          if (error) {
-            console.error(error);
-            setError('Failed to validate recovery link. Please try again.');
-          }
-          setTokenProcessed(true);
-        });
-    } else {
-      setError('Missing recovery token. Please use the password reset link from your email.');
-      setTokenProcessed(true);
-    }
-  }, []);
+  if (type === 'recovery' && accessToken) {
+    supabase.auth
+      .setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken ?? '',
+      })
+      .then(({ error }) => {
+        if (error) {
+          console.error(error);
+          setError('Failed to validate recovery link. Please try again.');
+        }
+        setTokenProcessed(true);
+      });
+  } else {
+    setError('Missing recovery token. Please use the password reset link from your email.');
+    setTokenProcessed(true);
+  }
+}, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
