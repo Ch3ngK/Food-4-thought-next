@@ -14,32 +14,37 @@ export default function ResetPassword() {
   const [tokenProcessed, setTokenProcessed] = useState(false);
   const router = useRouter();
 
-useEffect(() => {
-  if (typeof window === 'undefined') return;
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
 
-  const hashParams = new URLSearchParams(window.location.hash.substring(1));
-  const type = hashParams.get('type');
-  const accessToken = hashParams.get('access_token');
-  const refreshToken = hashParams.get('refresh_token');
+    // Handle both hash and query parameters
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const queryParams = new URLSearchParams(window.location.search);
+    
+    const type = hashParams.get('type') || queryParams.get('type');
+    const accessToken = hashParams.get('access_token') || queryParams.get('access_token');
+    const refreshToken = hashParams.get('refresh_token') || queryParams.get('refresh_token');
 
-  if (type === 'recovery' && accessToken) {
-    supabase.auth
-      .setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken ?? '',
-      })
-      .then(({ error }) => {
-        if (error) setError('Failed to validate recovery link. Please try again.');
-        setTokenProcessed(true);
-      });
-  } else {
-    setError('Missing recovery token. Please use the password reset link from your email.');
-    setTokenProcessed(true);
-  }
-}, []);
-
-
-
+    if (type === 'recovery' && accessToken) {
+      supabase.auth
+        .setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken ?? '',
+        })
+        .then(({ error }) => {
+          if (error) {
+            setError('Failed to validate recovery link. Please try again.');
+            console.error(error);
+          }
+          // Clear the URL parameters after processing
+          window.history.replaceState({}, document.title, window.location.pathname);
+          setTokenProcessed(true);
+        });
+    } else {
+      setError('Missing recovery token. Please use the password reset link from your email.');
+      setTokenProcessed(true);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,18 +54,42 @@ useEffect(() => {
       return;
     }
 
+    // Password validation
+    const passwordValidation = validatePassword(newPassword);
+    if (!passwordValidation.valid) {
+      setError(passwordValidation.message);
+      return;
+    }
+
     setIsSubmitting(true);
     const { error } = await supabase.auth.updateUser({ password: newPassword });
 
     if (error) {
       console.error(error);
-      setError(error.message);
+      if (error.message.includes('invalid refresh token')) {
+        setError('Password reset link has expired. Please request a new one.');
+      } else {
+        setError(error.message);
+      }
     } else {
       setMessage('Password reset successful! Redirecting to login...');
       setTimeout(() => router.push('/login'), 3000);
     }
 
     setIsSubmitting(false);
+  };
+
+  const validatePassword = (password: string) => {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    return {
+      valid: password.length >= minLength && hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar,
+      message: `Password must be at least ${minLength} characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.`
+    };
   };
 
   if (!tokenProcessed && !error) {
@@ -97,4 +126,3 @@ useEffect(() => {
     </div>
   );
 }
-
