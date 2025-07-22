@@ -17,10 +17,10 @@ export default function ResetPassword() {
 useEffect(() => {
   if (typeof window === 'undefined') return;
 
-  const hashParams = new URLSearchParams(window.location.hash.substring(1)); // <-- use hash instead of search
-  const type = hashParams.get('type');
-  const accessToken = hashParams.get('access_token');
-  const refreshToken = hashParams.get('refresh_token');
+  const queryParams = new URLSearchParams(window.location.search); // ✅ use search instead of hash
+  const type = queryParams.get('type');
+  const accessToken = queryParams.get('access_token');
+  const refreshToken = queryParams.get('refresh_token');
 
   if (type === 'recovery' && accessToken) {
     supabase.auth
@@ -40,6 +40,7 @@ useEffect(() => {
     setTokenProcessed(true);
   }
 }, []);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
