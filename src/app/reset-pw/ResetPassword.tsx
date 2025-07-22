@@ -15,26 +15,29 @@ export default function ResetPassword() {
   const router = useRouter();
 
 useEffect(() => {
+  if (typeof window === 'undefined') return;
+
   const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  const type = hashParams.get('type');
   const accessToken = hashParams.get('access_token');
   const refreshToken = hashParams.get('refresh_token');
-  const type = hashParams.get('type');
 
   if (type === 'recovery' && accessToken) {
-    supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken ?? '',
-    }).then(({ error }) => {
-      if (error) {
-        setError('Failed to validate recovery link. Please try again.');
-      }
-      setTokenProcessed(true);
-    });
+    supabase.auth
+      .setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken ?? '',
+      })
+      .then(({ error }) => {
+        if (error) setError('Failed to validate recovery link. Please try again.');
+        setTokenProcessed(true);
+      });
   } else {
     setError('Missing recovery token. Please use the password reset link from your email.');
     setTokenProcessed(true);
   }
 }, []);
+
 
 
 
