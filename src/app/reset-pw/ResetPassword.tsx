@@ -17,24 +17,22 @@ export default function ResetPassword() {
 useEffect(() => {
   if (typeof window === 'undefined') return;
 
-  const queryParams = new URLSearchParams(window.location.search); // ✅ use search instead of hash
-  const type = queryParams.get('type');
-  const accessToken = queryParams.get('access_token');
-  const refreshToken = queryParams.get('refresh_token');
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  const type = hashParams.get('type');
+  const accessToken = hashParams.get('access_token');
+  const refreshToken = hashParams.get('refresh_token');
 
   if (type === 'recovery' && accessToken) {
-    supabase.auth
-      .setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken ?? '',
-      })
-      .then(({ error }) => {
-        if (error) {
-          console.error(error);
-          setError('Failed to validate recovery link. Please try again.');
-        }
-        setTokenProcessed(true);
-      });
+    supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken ?? '',
+    }).then(({ error }) => {
+      if (error) {
+        console.error(error);
+        setError('Failed to validate recovery link. Please try again.');
+      }
+      setTokenProcessed(true);
+    });
   } else {
     setError('Missing recovery token. Please use the password reset link from your email.');
     setTokenProcessed(true);
