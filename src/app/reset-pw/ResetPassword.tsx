@@ -15,12 +15,10 @@ export default function ResetPassword() {
   const router = useRouter();
 
 useEffect(() => {
-  if (typeof window === 'undefined') return;
-
   const hashParams = new URLSearchParams(window.location.hash.substring(1));
-  const type = hashParams.get('type');
   const accessToken = hashParams.get('access_token');
   const refreshToken = hashParams.get('refresh_token');
+  const type = hashParams.get('type');
 
   if (type === 'recovery' && accessToken) {
     supabase.auth.setSession({
@@ -28,7 +26,6 @@ useEffect(() => {
       refresh_token: refreshToken ?? '',
     }).then(({ error }) => {
       if (error) {
-        console.error(error);
         setError('Failed to validate recovery link. Please try again.');
       }
       setTokenProcessed(true);
@@ -38,6 +35,7 @@ useEffect(() => {
     setTokenProcessed(true);
   }
 }, []);
+
 
 
   const handleSubmit = async (e: React.FormEvent) => {
