@@ -93,6 +93,7 @@ function Reviews() {
             <div 
               key={star} 
               className={`star-wrapper ${editable ? 'editable' : ''}`}
+              data-testid="star-icon"
               onMouseEnter={() => editable && onHover(star)}
               onMouseLeave={() => editable && onLeave()}
               onClick={() => editable && onRate(star)}
