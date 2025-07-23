@@ -1,185 +1,293 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '../supabaseClient';
+import './ResetPassword.css';
+import Image from 'next/image';
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AlertCircleIcon, CheckCircle2Icon } from 'lucide-react';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
 
-export default function ResetPassword() {
+function ResetPassword() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [logoUrl, setLogoUrl] = useState('');
+  const [passIconUrl, setPassIconUrl] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
   const [tokenProcessed, setTokenProcessed] = useState(false);
-  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Prevent hydration mismatch
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    setHasMounted(true);
+  }, []);
 
-    const processToken = async () => {
+  // Load images
+  useEffect(() => {
+    const loadImages = async () => {
+      const { data: logo } = supabase.storage.from('pictures').getPublicUrl('Food4Thought.png');
+      const { data: pass } = supabase.storage.from('pictures').getPublicUrl('password-icon.png');
+
+      setLogoUrl(logo.publicUrl);
+      setPassIconUrl(pass.publicUrl);
+    };
+
+    if (hasMounted) {
+      loadImages();
+    }
+  }, [hasMounted]);
+
+  // Process recovery tokens and set up session
+  useEffect(() => {
+    if (!hasMounted) return;
+
+    const processRecoveryToken = async () => {
       try {
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const queryParams = new URLSearchParams(window.location.search);
+        // Let Supabase automatically handle the auth callback from the URL
+        const { data, error } = await supabase.auth.getSession();
         
-        const type = hashParams.get('type') || queryParams.get('type');
-        const accessToken = hashParams.get('access_token') || queryParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token') || queryParams.get('refresh_token');
+        console.log('Getting current session:', { 
+          session: data.session,
+          error,
+          hash: window.location.hash,
+          search: window.location.search
+        });
 
-        if (type === 'recovery' && accessToken) {
-          const { error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken || ''
-          });
-
-          if (sessionError) {
-            throw sessionError;
-          }
-
-          const { data: { session }, error: getSessionError } = await supabase.auth.getSession();
+        if (data.session) {
+          console.log('Valid session found');
+          setSessionReady(true);
           
-          if (getSessionError || !session) {
-            throw new Error('Failed to establish valid session');
+          // Clean up the URL hash for security
+          if (window.location.hash) {
+            window.history.replaceState(null, '', window.location.pathname);
           }
-
-          window.history.replaceState({}, document.title, '/reset-pw');
-          setTokenProcessed(true);
         } else {
-          throw new Error('Missing or invalid reset token');
+          // Try to handle the auth callback manually if no session exists
+          const hashParams = new URLSearchParams(window.location.hash.substring(1));
+          const type = hashParams.get('type');
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
+
+          if (type === 'recovery' && accessToken) {
+            const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken || '',
+            });
+
+            if (sessionError) {
+              console.error('Session setup error:', sessionError);
+              setErrorMsg('Failed to validate recovery link. Please try again.');
+            } else {
+              console.log('Session established successfully');
+              setSessionReady(true);
+              
+              // Clean up the URL hash for security
+              if (window.location.hash) {
+                window.history.replaceState(null, '', window.location.pathname);
+              }
+            }
+          } else {
+            console.log('No valid recovery tokens found');
+            setErrorMsg('Invalid recovery link. Please use the password reset link from your email.');
+          }
         }
-      } catch (err) {
-        console.error('Token processing error:', err);
-        setError(err instanceof Error ? err.message : 'Invalid or expired reset link. Please request a new one.');
+      } catch (error) {
+        console.error('Token processing error:', error);
+        setErrorMsg('An error occurred while processing the recovery link.');
+      } finally {
         setTokenProcessed(true);
+        setIsLoading(false);
       }
     };
 
-    processToken();
+    processRecoveryToken();
+  }, [hasMounted, searchParams]);
+
+  // Listen for auth state changes (optional - mainly for debugging)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event, session?.user?.email);
+      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
+        setSessionReady(true);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg('');
+    setShowSuccessAlert(false);
+
+    // Validation
+    if (!newPassword || !confirmPassword) {
+      setErrorMsg('All fields are required');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setErrorMsg('Passwords do not match');
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
-      // Verify session exists
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session) {
-        throw new Error('Your session has expired. Please request a new reset link.');
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+      if (error) {
+        throw error;
       }
 
-      if (newPassword !== confirmPassword) {
-        throw new Error('Passwords do not match.');
-      }
-
-      const passwordValidation = validatePassword(newPassword);
-      if (!passwordValidation.valid) {
-        throw new Error(passwordValidation.message);
-      }
-
-      setIsSubmitting(true);
-      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
-
-      if (updateError) {
-        throw updateError;
-      }
+      setShowSuccessAlert(true);
+      setNewPassword('');
+      setConfirmPassword('');
       
-      setMessage('Password reset successful! Redirecting to login...');
+      // Redirect after showing success message
       setTimeout(() => {
-        supabase.auth.signOut();
         router.push('/login');
-      }, 3000);
-    } catch (err) {
-      console.error('Password reset error:', err);
-      if (err instanceof Error) {
-        setError(err.message.includes('invalid refresh token') 
-          ? 'This reset link has expired. Please request a new one.'
-          : err.message
-        );
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Password update error:', error);
+      if (error instanceof Error) {
+        setErrorMsg(error.message);
       } else {
-        setError('Failed to reset password. Please try again.');
+        setErrorMsg('An unknown error occurred while updating password');
       }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const validatePassword = (password: string) => {
-    const minLength = 8;
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    
-    return {
-      valid: password.length >= minLength && hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar,
-      message: `Password must meet the following requirements:
-      - At least ${minLength} characters
-      - One uppercase letter
-      - One lowercase letter
-      - One number
-      - One special character`
-    };
-  };
-
-  if (!tokenProcessed && !error) {
-    return <div className="flex justify-center items-center h-screen">Verifying your reset link...</div>;
-  }
+  if (!hasMounted) return null;
 
   return (
-    <div className="max-w-md mx-auto p-6 mt-10 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold text-center mb-6">Reset Your Password</h2>
+    <div className="reset-password-container">
       
-      {message && (
-        <div className="mb-4 p-4 bg-green-100 text-green-700 rounded-md">
-          {message}
+      <div className="alert-container-reset">
+        <div className="alert-wrapper-reset">
+          {showSuccessAlert && (
+            <Alert className="alert-reset success">
+              <CheckCircle2Icon className="alert-icon-reset" />
+              <div>
+                <AlertTitle className="alert-title-reset">Password Updated!</AlertTitle>
+                <AlertDescription className="alert-description-reset">
+                  Your password has been successfully updated. Redirecting you to login...
+                </AlertDescription>
+              </div>
+            </Alert>
+          )}
+          {errorMsg && (
+            <Alert variant="destructive" className="alert-reset error">
+              <AlertCircleIcon className="alert-icon-reset" />
+              <div>
+                <AlertTitle className="alert-title-reset">Error</AlertTitle>
+                <AlertDescription className="alert-description-reset">
+                  {errorMsg}
+                </AlertDescription>
+              </div>
+            </Alert>
+          )}
         </div>
-      )}
-      
-      {error && (
-        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
-          {error}
-        </div>
-      )}
+      </div>
 
-      {!message && (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              New Password
-            </label>
-            <Input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-              className="w-full"
-            />
+      <div className="background-img"></div>
+      
+      <main className="reset-password-content">
+        <div className="logo-section-reset">
+          <div className="welcome-text-reset">Welcome back to</div>
+          {logoUrl && <Image 
+            src={logoUrl} 
+            alt="Logo" 
+            width={200} 
+            height={80} 
+            className="logo-image"
+            priority
+          />}
+        </div>
+
+        <h1 className="reset-password-title">Reset Your Password</h1>
+
+        {isLoading ? (
+          <div className="loading-container">
+            <div className="loading-text">Validating recovery link...</div>
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Confirm New Password
-            </label>
-            <Input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              className="w-full"
-            />
+        ) : !sessionReady || errorMsg ? (
+          <div className="error-container">
+            <p>Unable to process password reset. Please request a new password reset link.</p>
           </div>
-          
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`w-full py-2 px-4 rounded-md text-white font-medium ${
-              isSubmitting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-            }`}
-          >
-            {isSubmitting ? 'Processing...' : 'Reset Password'}
-          </button>
-        </form>
-      )}
+        ) : (
+          <form onSubmit={handleResetPassword} className="reset-password-form">
+            <div className="input-group">
+              <Label htmlFor="newPassword">New Password</Label>
+              <div className="input-wrapper">
+                <Input
+                  name="newPassword"
+                  type="password"
+                  placeholder="Enter new password"
+                  required
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="reset-password-input"
+                />
+                {passIconUrl && <Image 
+                  src={passIconUrl} 
+                  alt="Password Icon" 
+                  width={20} 
+                  height={20} 
+                  className="input-icon"
+                />}
+              </div>
+            </div>
+
+            <div className="input-group">
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <div className="input-wrapper">
+                <Input
+                  name="confirmPassword"
+                  type="password"
+                  placeholder="Confirm new password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="reset-password-input"
+                />
+                {passIconUrl && <Image 
+                  src={passIconUrl} 
+                  alt="Password Icon" 
+                  width={20} 
+                  height={20} 
+                  className="input-icon"
+                />}
+              </div>
+            </div>
+
+            <button 
+              type="submit" 
+              disabled={isSubmitting} 
+              className="reset-password-button"
+            >
+              {isSubmitting ? 'Updating...' : 'Update Password'}
+            </button>
+          </form>
+        )}
+      </main>
     </div>
   );
 }
+
+export default ResetPassword;

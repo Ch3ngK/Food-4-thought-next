@@ -6,6 +6,7 @@ import './Login.css';
 import Image from 'next/image';
 import Link from 'next/link';
 import { supabase } from '../supabaseClient';
+import { createClient } from '@supabase/supabase-js';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertCircleIcon, CheckCircle2Icon } from 'lucide-react';
@@ -24,8 +25,10 @@ function Login() {
   const [userIconUrl, setUserIconUrl] = useState('');
   const [passIconUrl, setPassIconUrl] = useState('');
   const [chefUrl, setChefUrl] = useState('');
+  const [googleIconUrl, setGoogleIconUrl] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);  
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   useEffect(() => {
     const loadImages = async () => {
@@ -33,11 +36,13 @@ function Login() {
       const { data: user } = supabase.storage.from('pictures').getPublicUrl('user-icon.png');
       const { data: pass } = supabase.storage.from('pictures').getPublicUrl('password-icon.png');
       const { data: chef } = supabase.storage.from('pictures').getPublicUrl('chef.png');
+      const { data: google } = supabase.storage.from('pictures').getPublicUrl('googleIcon.png');
 
       setLogoUrl(logo.publicUrl);
       setUserIconUrl(user.publicUrl);
       setPassIconUrl(pass.publicUrl);
       setChefUrl(chef.publicUrl);
+      setGoogleIconUrl(google.publicUrl);
     };
     loadImages();
   }, []);
@@ -66,6 +71,33 @@ function Login() {
         setErrorMsg(error.message);
       } else {
         setErrorMsg('An unknown error occurred during login');
+      }
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setErrorMsg('');
+    setIsGoogleLoading(true);
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/home`
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // the redirect will happen automatically, so we don't need to do anything else here
+    } catch (error) {
+      setIsGoogleLoading(false);
+      if (error instanceof Error) {
+        setErrorMsg(error.message);
+      } else {
+        setErrorMsg('An error occurred during Google sign-in');
       }
     }
   };
@@ -124,6 +156,34 @@ function Login() {
         </div>
 
         <h1 className="login-title">Login</h1>
+
+        {/* google sign in Button */}
+        <button 
+          type="button" 
+          onClick={handleGoogleLogin}
+          disabled={isGoogleLoading}
+          className="google-login-button"
+        >
+          <div className="google-button-content">
+            {googleIconUrl && (
+              <Image 
+                src={googleIconUrl} 
+                alt="Google Icon" 
+                width={20} 
+                height={20} 
+                className="google-icon"
+              />
+            )}
+            <span>{isGoogleLoading ? 'Signing in...' : 'Sign In with Google'}</span>
+          </div>
+        </button>
+
+        {/* Divider */}
+        <div className="login-divider">
+          <div className="divider-line"></div>
+          <span className="divider-text">or</span>
+          <div className="divider-line"></div>
+        </div>
 
         <form onSubmit={handleLogin} className="login-form">
           <div className="input-group">

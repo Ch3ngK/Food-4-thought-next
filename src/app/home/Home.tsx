@@ -97,6 +97,7 @@ const useCarousel = (carouselApi: CarouselApi | undefined) => {
 const useUser = () => {
   const [username, setUsername] = useState<string | null>(null);
   const [isUserLoaded, setIsUserLoaded] = useState(false);
+  const [userProvider, setUserProvider] = useState<string | null>(null);
 
   const fetchUser = useCallback(async () => {
     if (isUserLoaded) return; // prevents refetching of datas
@@ -109,15 +110,33 @@ const useUser = () => {
       }
 
       if (user) {
-        const fetchedUsername = user.user_metadata?.username || user.email;
+        const provider = user.app_metadata?.provider || 'email';
+        setUserProvider(provider);
+
+        let fetchedUsername: string;
+
+        if (provider === 'google') {
+          // for Google users
+          fetchedUsername = 
+            user.user_metadata?.full_name || 
+            user.user_metadata?.name || 
+            user.email?.split('@')[0] || 
+            'User';
+        } else {
+          // for email/password users
+          fetchedUsername = user.user_metadata?.username || user.email || 'User';
+        }
+
         setUsername(fetchedUsername);
       }
+    } catch (error) {
+      console.error('Error in fetchUser:', error);
     } finally {
       setIsUserLoaded(true);
     }
   }, [isUserLoaded]);
 
-  return { username, fetchUser, isUserLoaded };
+  return { username, fetchUser, isUserLoaded, userProvider };
 };
 
 // custom hook for image URLs with caching
