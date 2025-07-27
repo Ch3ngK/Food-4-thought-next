@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "jsx": "preserve"
+  },
+  "include": ["**/*.test.ts", "**/*.test.tsx", "jest.setup.ts"]
+}

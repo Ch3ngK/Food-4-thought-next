@@ -340,22 +340,22 @@ function Home() {
           </div>
         </div>
 
-        <div className="text-box-1">
+        <div className="text-box-1" data-testid="home-container">
           <nav className="navigation-bar">
             <div className="nav-container">
-              <Link href="/cuisinePage" className="nav-link">
+              <Link href="/cuisinePage" className="nav-link" data-testid='cuisinePage-link'>
                 <span className="nav-icon">🍽️</span>
                 <span className="nav-text">Cuisines</span>
               </Link>
-              <Link href="/popular" className="nav-link">
+              <Link href="/popular" className="nav-link" data-testid='popular-link'>
                 <span className="nav-icon">🔥</span>
                 <span className="nav-text">Popular</span>
               </Link>
-              <Link href="/about" className="nav-link">
+              <Link href="/about" className="nav-link" data-testid="about-link">
                 <span className="nav-icon">ℹ️</span>
                 <span className="nav-text">About</span>
               </Link>
-              <Link href="../food-trail" className="nav-link special-link">
+              <Link href="../food-trail" className="nav-link special-link" data-testid="create-food-trail-link" id="food-trail-link">
                 <span className="nav-icon">🗺️</span>
                 <span className="nav-text">Create Food Trail</span>
               </Link>
@@ -368,7 +368,7 @@ function Home() {
 
           <div className="carousel">
             {isLoadingCarousel ? (
-              <div className="carousel-loading">
+              <div className="carousel-loading" data-testid="carousel-loading">
                 <p>Loading trending foods...</p>
               </div>
             ) : (
@@ -384,6 +384,7 @@ function Home() {
                             style={{ cursor: 'pointer' }}
                           >
                             <Image 
+                              data-testid="food-cuisine"
                               src={item.src} 
                               alt={`trending-food-${index}`}  
                               className="carousel-img" 
@@ -391,7 +392,7 @@ function Home() {
                               height={200} 
                               style={{ borderRadius: '20px' }} 
                             />
-                            <p className="carousel-description mt-2 text-center">
+                            <p className="carousel-description mt-2 text-center" data-testid="food-description">
                               {item.description}
                               {item.cuisineName && (
                                 <span className="cuisine-badge" style={{ 
@@ -504,7 +505,7 @@ function Home() {
               <div className="cta-content">
                 <h2 className="cta-title">Ready to explore?</h2>
                 <p className="cta-subtitle">Create your personalized food trail and discover hidden gems</p>
-                <Link href="../food-trail" className="cta-button">
+                <Link href="../food-trail" className="cta-button" data-testid="cta-food-trail-link">
                   Create Your Food Trail
                 </Link>
               </div>

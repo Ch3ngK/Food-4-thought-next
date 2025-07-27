@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../supabaseClient';
+import React from 'react';
+
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter();
