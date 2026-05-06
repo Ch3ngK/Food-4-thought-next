@@ -17,7 +17,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
 });
 
-export const useAuth = () => {
+export const useAuth = () => {                                       //export to allow access to the context in other components
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
@@ -34,14 +34,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
+      const { 
+              data: { 
+                session 
+              }, 
+              error } = await supabase.auth.getSession(); //await to ensure that getSession() completes before proceeding
       
       if (error) {
         console.error('Error getting session:', error);
       } else {
         setSession(session);
-        setUser(session?.user ?? null);
-        
+        setUser(session?.user ?? null); //session?.user means if session exists, get session.user, else return undefined
+                                        //?? null means if session?.user returns undefined, use null instead.
         // Handle OAuth callback - if user just logged in via OAuth
         if (session?.user && window.location.pathname === '/') {
           router.push('/home');
